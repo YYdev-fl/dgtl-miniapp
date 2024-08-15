@@ -1,8 +1,7 @@
 {
   "scripts": {
-    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
-    "start:backend": "cd server && npm start",
-    "start:frontend": "cd client && npm run dev",
+    "start": "next start",
+    "build": "next build",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:bot\"",
     "dev:backend": "cd server && nodemon index.js",
     "dev:frontend": "cd client && npx next dev",
