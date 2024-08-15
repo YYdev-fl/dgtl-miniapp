@@ -5,7 +5,7 @@ function index() {
     <div className="flex flex-col min-h-screen">
     {/* Main content */}
     <div className="flex-grow p-4">
-      <h1 className="text-2xl font-bold">Welcome to DaisyUI Tabs Example</h1>
+      <h1 className="text-2xl font-bold">Boosts page</h1>
       <p>Your main content goes here.</p>
     </div>
 
