@@ -5,9 +5,8 @@ function index() {
     <div className="flex flex-col min-h-screen">
     {/* Main content */}
     <div className="flex-grow p-4">
-      <h1 className="text-2xl font-bold">Tasks page</h1>
-      <p>Your main content goes here.</p>
-      <button className="btn glass">Glass button</button>
+      <h1 className="text-2xl font-bold">Invite friends</h1>
+      <button className="btn glass">Invite</button>
     </div>
 
     <div role="tablist" className="tabs tabs-boxed">
