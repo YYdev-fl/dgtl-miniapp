@@ -1,38 +1,23 @@
-require("dotenv").config(); 
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { connect } = require("mongoose");
-const connectToDB = require('./database/db.js');
-const User = require("./models/user-data.model.js");
-
+const connectToDB = require('./config/db');
+const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 
+// Middleware
 app.use(cors());
+app.use(express.json());
 
-connectToDB();
+// Routes
+app.use('/api/users', userRoutes);
 
-app.get("/user", async (req, res) => {
-  try{
-    const result = await User.find();
-    res.send({
-      succes: true,
-      message: "User Data Retrieved Succesfully",
-      data: result,
-    });
-  } catch(error) {
-    const result = await User.find();
-    res.send({
-      succes: false,
-      message: "Failed To Retrieve User Data",
-      data: result,
-    })
-  }
+// Connect to the database and start the server
+connectToDB().then(() => {
+  app.listen(process.env.PORT, () => {
+    console.log(`Server is running on port ${process.env.PORT}`);
+  });
+}).catch((error) => {
+  console.error('Failed to connect to the database:', error);
 });
-
-// Start the server
-app.listen(process.env.PORT, () => {
-  console.log(`Server is running on `, process.env.PORT);
-});
-
-
