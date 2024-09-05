@@ -1,22 +1,92 @@
-import Link from "next/link"
+import Link from "next/link";
 
-function index() {
+function Index() {
   return (
-    <div className="flex flex-col min-h-screen">
-    {/* Main content */}
-    <div className="flex-grow p-4">
-      <h1 className="text-2xl font-bold">Home page</h1>
-      <p>Your main content goes here.</p>
-    </div>
+    <div className="flex flex-col min-h-screen p-3">
+      {/* Main Card */}
+      <div className="card bg-neutral shadow-xl mb-3">
+        <div className="card-body text-white p-4">
+          <h2 className="card-title text-2xl">ascar</h2>
+        </div>
+      </div>
 
-    <div role="tablist" className="tabs tabs-boxed">
-    <a role="tab" className="tab tab-active h-16" href="/">Home</a>
-    <a role="tab" className="tab h-16" href="/boosts">Boosts</a>
-    <a role="tab" className="tab h-16" href="/tasks">Tasks</a>
-    <a role="tab" className="tab h-16" href="/friends">Friends</a>
-  </div>
-  </div>
-  )
+      {/* Stats Section */}
+      <div className="stats bg-neutral text-primary-content">
+        <div className="stat">
+          <div className="stat-title">Account balance</div>
+          <div className="stat-value text-white text-3xl">5,400 GTL</div>
+        </div>
+        <div className="stat">
+          <div className="stat-title">LVL</div>
+          <div className="stat-value text-white text-5xl">1</div>
+        </div>
+      </div>
+
+      {/* New Level Card Section */}
+      <div className="card bg-neutral shadow-lg mt-4">
+        <div className="card-body text-white">
+          <h2 className="card-title text-xl mb-3">Levels</h2>
+
+          {/* Level 1 */}
+          <div className="relative bg-neutral-content rounded-lg mb-2 shadow-inner overflow-hidden">
+            <img
+              src="/level1-bg.png"
+              alt="Level 1"
+              className="w-full object-cover "
+            />
+            <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black to-transparent flex items-center justify-between ">
+              <div className="text-lg font-bold text-white">Level 1</div>
+              <button className="btn btn-sm btn-primary">Play</button>
+            </div>
+          </div>
+
+          {/* Level 2 */}
+          <div className="relative bg-neutral-content rounded-lg mb-2 shadow-inner overflow-hidden">
+            <img
+              src=""
+              alt="Level 2"
+              className="w-full object-cover h-24"
+            />
+            <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black to-transparent flex items-center justify-between ">
+              <div className="text-lg font-bold text-white">Level 2</div>
+              <button className="btn btn-sm btn-primary">Play</button>
+            </div>
+          </div>
+
+          {/* Coming Soon Section */}
+          <div className="flex items-center justify-center p-3 rounded-lg shadow-inner relative">
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-neutral opacity-50"></div>
+            <p className="text-center font-semibold text-white relative z-10">
+              Coming Soon...
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div
+        role="tablist"
+        className="fixed bottom-0 left-0 right-0 tabs tabs-boxed p-3"
+      >
+        <a
+          role="tab"
+          className="tab border-2 border-accent shadow-glow h-16"
+          href="/"
+        >
+          <img src="/icons/white/home-1.svg" alt="Home" className="w-8 h-8" />
+        </a>
+        <a role="tab" className="tab h-16" href="/boosts">
+          <img src="/icons/white/basket.svg" alt="Boosts" className="w-8 h-8" />
+        </a>
+        <a role="tab" className="tab h-16" href="/tasks">
+          <img src="/icons/white/invoice-1.svg" alt="Tasks" className="w-8 h-8" />
+        </a>
+        <a role="tab" className="tab h-16" href="/friends">
+          <img src="/icons/white/user-group.svg" alt="Friends" className="w-8 h-8" />
+        </a>
+      </div>
+    </div>
+  );
 }
 
-export default index
+export default Index;
