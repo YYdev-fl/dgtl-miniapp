@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/router";
 
+// Define mineral interface
 interface Mineral {
   id: number;
   x: number;
@@ -13,24 +14,27 @@ interface Mineral {
   value: number;
 }
 
+// Mineral data with images, values, and rotation speed
 const mineralsData = [
   { image: "/minerals/1.png", value: 1, rotationSpeed: 1 }, // Adjust paths and values
   { image: "/minerals/2.png", value: 2, rotationSpeed: 1.5 },
   { image: "/minerals/3.png", value: 3, rotationSpeed: 2 },
   { image: "/minerals/au.png", value: 4, rotationSpeed: 2.5 },
 ];
+
 const Game: React.FC = () => {
   const [minerals, setMinerals] = useState<Mineral[]>([]);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(10);
   const [isGameOver, setIsGameOver] = useState(false);
   const [collectedMinerals, setCollectedMinerals] = useState<Record<string, number>>({});
+  const [isLoading, setIsLoading] = useState(true); // State for loading
   const gameAreaRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number | null>(null);
   const mineralIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const router = useRouter();
 
-  // Preload image and add mineral once loaded
+  // Preload an image and return a promise that resolves when loaded
   const preloadImage = (src: string) => {
     return new Promise<void>((resolve, reject) => {
       const img = new Image();
@@ -38,6 +42,29 @@ const Game: React.FC = () => {
       img.onload = () => resolve();
       img.onerror = () => reject();
     });
+  };
+
+  // Preload background video by creating a video element
+  const preloadVideo = (src: string) => {
+    return new Promise<void>((resolve, reject) => {
+      const video = document.createElement("video");
+      video.src = src;
+      video.oncanplaythrough = () => resolve();
+      video.onerror = () => reject();
+      video.load();
+    });
+  };
+
+  // Function to preload all game assets
+  const preloadAssets = async () => {
+    try {
+      // Preload all mineral images and background video
+      const imagePromises = mineralsData.map((mineral) => preloadImage(mineral.image));
+      await Promise.all([...imagePromises, preloadVideo("/game/bg/123.mp4")]);
+      setIsLoading(false); // Set loading to false when all assets are loaded
+    } catch (error) {
+      console.error("Failed to load assets:", error);
+    }
   };
 
   // Function to add a new mineral
@@ -146,6 +173,22 @@ const Game: React.FC = () => {
     router.push("/");
   };
 
+  // Load all assets on component mount
+  useEffect(() => {
+    preloadAssets();
+  }, []);
+
+  // Render loading screen if still loading assets
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen w-screen bg-base-100">
+        <div className="text-center">
+          <span className="loading loading-spinner loading-lg"></span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="card bg-neutral text-white overflow-hidden fixed inset-0 w-full h-full">
       {/* Background Video */}
@@ -209,28 +252,24 @@ const Game: React.FC = () => {
         ))}
       </div>
 
-      {/* Game Over Summary */}
+      {/* Game Over Popup */}
       {isGameOver && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 z-20">
           <div className="bg-white text-black p-8 rounded shadow-lg w-full max-w-md">
-            <h2 className="text-2xl mb-4 text-center">Game Over!</h2>
-            <div className="overflow-y-auto max-h-60">
-              {Object.entries(collectedMinerals).map(([image, count]) => {
-                const mineralData = mineralsData.find((m) => m.image === image);
-                const value = mineralData ? mineralData.value : 0;
-                return (
-                  <div key={image} className="flex items-center mb-2">
-                    <img src={image} alt="mineral" className="w-10 h-10 mr-4" />
-                    <span className="flex-1">{`Collected: ${count}`}</span>
-                    <span className="flex-1">{`Total Coins: ${count * value}`}</span>
-                  </div>
-                );
-              })}
+            <h2 className="text-2xl mb-4">Game Over!</h2>
+            <p className="mb-4">You scored: {score} coins</p>
+            <div className="overflow-y-auto max-h-48 mb-4">
+              {Object.entries(collectedMinerals).map(([image, count]) => (
+                <div key={image} className="flex items-center mb-2">
+                  <img src={image} alt="mineral" className="w-8 h-8 mr-2" />
+                  <span className="mr-2">{count}x</span>
+                  <span className="text-sm text-gray-600">({mineralsData.find((m) => m.image === image)?.value} coins each)</span>
+                </div>
+              ))}
             </div>
-            <p className="mt-4 text-lg font-bold text-center">{`Total Score: ${score}`}</p>
             <button
               onClick={handleGameEnd}
-              className="mt-4 w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none"
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none"
             >
               Go Back
             </button>
