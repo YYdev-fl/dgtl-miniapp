@@ -8,6 +8,11 @@ interface CardData {
   owned: number; // Number of cards owned by the user
 }
 
+interface MineralData {
+  imageUrl: string; // Placeholder for image URL
+  owned: number; // Number of cards owned by the user
+}
+
 // Sample data for the cards
 const cards: CardData[] = [
   {
@@ -34,6 +39,76 @@ const cards: CardData[] = [
     imageUrl: "/path-to-image/protection-shield.png", // Update with your image path
     owned: 4,
   },
+
+];
+
+const minerals: MineralData[] = [
+  {
+    imageUrl: "/mineral/c.png", // Placeholder for image URL
+    owned: 1,
+  },
+  {
+    imageUrl: "/mineral/au.png", // Placeholder for image URL
+    owned: 1,
+  },
+  {
+    imageUrl: "/mineral/as.png", // Placeholder for image URL
+    owned: 1,
+  },
+  {
+    imageUrl: "/mineral/ba.png", // Placeholder for image URL
+    owned: 1,
+  },
+  {
+    imageUrl: "/mineral/br.png", // Placeholder for image URL
+    owned: 1,
+  },
+  {
+    imageUrl: "/mineral/ca.png", // Placeholder for image URL
+    owned: 1,
+  },
+  {
+    imageUrl: "/mineral/cs.png", // Placeholder for image URL
+    owned: 1,
+  },
+  {
+    imageUrl: "/mineral/fe.png", // Placeholder for image URL
+    owned: 1,
+  },
+  {
+    imageUrl: "/mineral/mn-1.png", // Placeholder for image URL
+    owned: 1,
+  },
+  {
+    imageUrl: "/mineral/p.png", // Placeholder for image URL
+    owned: 1,
+  },{
+    imageUrl: "/mineral/pd.png", // Placeholder for image URL
+    owned: 1,
+  },
+  {
+    imageUrl: "/mineral/rh.png", // Placeholder for image URL
+    owned: 1,
+  },{
+    imageUrl: "/mineral/sb.png", // Placeholder for image URL
+    owned: 1,
+  },
+  {
+    imageUrl: "/mineral/sn.png", // Placeholder for image URL
+    owned: 1,
+  },
+  {
+    imageUrl: "/mineral/ti.png", // Placeholder for image URL
+    owned: 1,
+  },
+  {
+    imageUrl: "/mineral/u.png", // Placeholder for image URL
+    owned: 1,
+  },
+  {
+    imageUrl: "/mineral/zr.png", // Placeholder for image URL
+    owned: 1,
+  }
 ];
 
 const Index: React.FC = () => {
@@ -89,6 +164,46 @@ const Index: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Card Section 2*/}
+      <div className="p-3">
+          <div className="card bg-base-100 shadow-md text-white border-2 border-accent shadow-glow">
+            <div className="card-body flex justify-center items-center">
+              <h2 className="card-title text-center text-2xl font-bold">
+                Collections
+              </h2>
+            </div>
+          </div>
+        </div>
+            
+      
+        <div className="card bg-neutral text-white p-5 shadow-lg m-3 shadow-md">
+  <h2 className="card-title text-center mb-4">Periodic table</h2>
+  <div className="grid grid-cols-2 gap-4">
+    {minerals.map((card, index) => (
+      <div
+        key={index}
+        className="flex items-center bg-secondary text-white p-4 rounded-xl"
+      >
+        {/* Card Image */}
+        <img
+          src={card.imageUrl}
+          className="w-22 h-22 object-contain mr-4 rounded-xl"
+        />
+        {/* <div className="flex-1">
+          <h3 className="font-bold text-lg">{card.title}</h3>
+          <p className="font-semibold">{card.price}</p>
+          <p className="text-sm">{card.weight}</p>
+        </div> */}
+      </div>
+    ))}
+  </div>
+</div>
+
+
+        
+      
+
 
       {/* Tab Navigation */}
       <div role="tablist" className="fixed bottom-0 left-0 right-0 tabs tabs-boxed p-3">
