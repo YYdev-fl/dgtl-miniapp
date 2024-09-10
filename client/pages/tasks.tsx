@@ -80,7 +80,7 @@ const Index: React.FC = () => {
       {/* Main content */}
       <div className="flex-grow">
         <div className="text-center p-5">
-          <h1 className="text-3xl font-bold p-2">💌 Join Us</h1>
+          <h1 className="text-3xl font-bold p-2">👣Join Us</h1>
           <p className="p-2">Join the GTL community on social media for the latest updates and exclusive bonuses! 🎁💸</p>
         </div>
 

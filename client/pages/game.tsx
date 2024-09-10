@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/router";
 
 interface Circle {
@@ -20,7 +20,7 @@ const Game: React.FC = () => {
   const router = useRouter();
 
   // Function to add a new circle with random speed and position
-  const addCircle = () => {
+  const addCircle = useCallback(() => {
     if (!isGameOver) {
       const gameAreaWidth = gameAreaRef.current?.clientWidth || 0;
       const id = Math.random();
@@ -35,10 +35,10 @@ const Game: React.FC = () => {
         },
       ]);
     }
-  };
+  }, [isGameOver]);
 
   // Update the positions of the circles
-  const updateCircles = () => {
+  const updateCircles = useCallback(() => {
     setCircles((prevCircles) =>
       prevCircles
         .map((circle) => ({
@@ -50,10 +50,11 @@ const Game: React.FC = () => {
             circle.y - circle.radius < (gameAreaRef.current?.clientHeight || 0)
         )
     );
+
     if (!isGameOver) {
       animationFrameRef.current = requestAnimationFrame(updateCircles);
     }
-  };
+  }, [isGameOver]);
 
   // Initialize the animation frame
   useEffect(() => {
@@ -66,7 +67,7 @@ const Game: React.FC = () => {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [isGameOver]);
+  }, [isGameOver, updateCircles]);
 
   // Interval to add circles
   useEffect(() => {
@@ -77,7 +78,7 @@ const Game: React.FC = () => {
         clearInterval(circleIntervalRef.current);
       }
     };
-  }, []);
+  }, [addCircle]);
 
   // Timer countdown
   useEffect(() => {
@@ -96,12 +97,17 @@ const Game: React.FC = () => {
   }, [timeLeft, isGameOver]);
 
   // Handle circle click to remove it and increase score
-  const handleCircleClick = (id: number) => {
-    setCircles((prevCircles) =>
-      prevCircles.filter((circle) => circle.id !== id)
-    );
+  const handleCircleClick = useCallback((id: number) => {
+    // Hide the clicked circle immediately
+    const circleElement = document.getElementById(`circle-${id}`);
+    if (circleElement) {
+      circleElement.style.display = "none"; // Instantly hide the circle
+    }
+
+    // Update state to remove the circle
+    setCircles((prevCircles) => prevCircles.filter((circle) => circle.id !== id));
     setScore((prevScore) => prevScore + 1);
-  };
+  }, []);
 
   // Handle the end of the game and navigate back to index
   const handleGameEnd = () => {
@@ -112,7 +118,7 @@ const Game: React.FC = () => {
     <div className="card bg-neutral text-white overflow-hidden fixed inset-0 w-full h-full">
       {/* Background Video */}
       <video
-        className="absolute inset-1 w-full h-full object-cover z-0"
+        className="absolute inset-0 w-full h-full object-cover z-0"
         src="/game/bg/123.mp4" // Adjust this path as necessary
         autoPlay
         loop
@@ -124,9 +130,7 @@ const Game: React.FC = () => {
       <div
         ref={gameAreaRef}
         className="relative z-10 w-full h-full bg-base-100 bg-opacity-50 overflow-hidden select-none p-3 box-border"
-        style={{
-          userSelect: "none",
-        }}
+        style={{ userSelect: "none" }}
       >
         {/* Score Display */}
         <h1 className="absolute top-4 left-4 text-2xl z-20 pointer-events-none">
@@ -142,7 +146,8 @@ const Game: React.FC = () => {
         {circles.map((circle) => (
           <div
             key={circle.id}
-            onMouseDown={() => handleCircleClick(circle.id)}
+            id={`circle-${circle.id}`} // Unique ID for immediate handling
+            onClick={() => handleCircleClick(circle.id)} // Use onClick for better touch response
             style={{
               position: "absolute",
               left: circle.x - 5,
@@ -152,6 +157,7 @@ const Game: React.FC = () => {
               cursor: "pointer",
               transition: "transform 0.1s",
               pointerEvents: "auto",
+              touchAction: "manipulation", // Prevent touch delay on mobile
             }}
           >
             <div
