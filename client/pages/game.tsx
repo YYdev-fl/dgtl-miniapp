@@ -30,7 +30,7 @@ const Game: React.FC = () => {
           id,
           x: Math.random() * (gameAreaWidth - 48),
           y: -24,
-          radius: 8 + Math.random() * 16,
+          radius: 15 + Math.random() * 10,
           speed: 1 + Math.random() * 1.5,
         },
       ]);
@@ -71,7 +71,7 @@ const Game: React.FC = () => {
 
   // Interval to add circles
   useEffect(() => {
-    circleIntervalRef.current = setInterval(addCircle, 200);
+    circleIntervalRef.current = setInterval(addCircle, 300);
 
     return () => {
       if (circleIntervalRef.current) {
