@@ -7,7 +7,7 @@ interface Mineral {
   x: number;
   y: number;
   radius: number;
-  speed: number;
+  speed: number; // Pixels per second
   rotationSpeed: number;
   rotation: number;
   image: string;
@@ -16,7 +16,7 @@ interface Mineral {
 
 // Mineral data with images, values, and rotation speed
 const mineralsData = [
-  { image: "/minerals/1.png", value: 1, rotationSpeed: 1 }, // Adjust paths and values
+  { image: "/minerals/1.png", value: 1, rotationSpeed: 1 },
   { image: "/minerals/2.png", value: 2, rotationSpeed: 1.5 },
   { image: "/minerals/3.png", value: 3, rotationSpeed: 2 },
   { image: "/minerals/au.png", value: 4, rotationSpeed: 2.5 },
@@ -28,10 +28,11 @@ const Game: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState(10);
   const [isGameOver, setIsGameOver] = useState(false);
   const [collectedMinerals, setCollectedMinerals] = useState<Record<string, number>>({});
-  const [isLoading, setIsLoading] = useState(true); // State for loading
+  const [isLoading, setIsLoading] = useState(true);
   const gameAreaRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number | null>(null);
   const mineralIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lastTimeRef = useRef<number>(0); // Reference to store the last timestamp
   const router = useRouter();
 
   // Preload an image and return a promise that resolves when loaded
@@ -85,7 +86,7 @@ const Game: React.FC = () => {
             x: Math.random() * (gameAreaWidth - 48),
             y: -24,
             radius: 15 + Math.random() * 10,
-            speed: 1 + Math.random() * 1.5,
+            speed: 100 + Math.random() * 50, // Speed in pixels per second
             rotationSpeed: randomMineral.rotationSpeed,
             rotation: 0,
             image: randomMineral.image,
@@ -98,25 +99,34 @@ const Game: React.FC = () => {
     }
   }, [isGameOver]);
 
-  // Update the positions and rotations of the minerals
-  const updateMinerals = useCallback(() => {
-    setMinerals((prevMinerals) =>
-      prevMinerals
-        .map((mineral) => ({
-          ...mineral,
-          y: mineral.y + mineral.speed,
-          rotation: mineral.rotation + mineral.rotationSpeed,
-        }))
-        .filter(
-          (mineral) =>
-            mineral.y - mineral.radius < (gameAreaRef.current?.clientHeight || 0)
-        )
-    );
+  // Update the positions and rotations of the minerals with consistent speed
+  const updateMinerals = useCallback(
+    (timestamp: number) => {
+      if (!lastTimeRef.current) {
+        lastTimeRef.current = timestamp;
+      }
+      const deltaTime = (timestamp - lastTimeRef.current) / 1000; // Calculate time difference in seconds
+      lastTimeRef.current = timestamp;
 
-    if (!isGameOver) {
-      animationFrameRef.current = requestAnimationFrame(updateMinerals);
-    }
-  }, [isGameOver]);
+      setMinerals((prevMinerals) =>
+        prevMinerals
+          .map((mineral) => ({
+            ...mineral,
+            y: mineral.y + mineral.speed * deltaTime, // Use deltaTime to normalize speed
+            rotation: mineral.rotation + mineral.rotationSpeed * deltaTime * 60, // Adjust rotation speed consistently
+          }))
+          .filter(
+            (mineral) =>
+              mineral.y - mineral.radius < (gameAreaRef.current?.clientHeight || 0)
+          )
+      );
+
+      if (!isGameOver) {
+        animationFrameRef.current = requestAnimationFrame(updateMinerals);
+      }
+    },
+    [isGameOver]
+  );
 
   // Initialize the animation frame
   useEffect(() => {
@@ -183,7 +193,7 @@ const Game: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-screen w-screen bg-base-100">
         <div className="text-center">
-          <span className="loading loading-spinner loading-lg"></span>
+          <div className="loading loading-spinner loading-lg mb-4"></div>
         </div>
       </div>
     );
@@ -238,42 +248,21 @@ const Game: React.FC = () => {
           >
             <img
               src={mineral.image}
-              alt="mineral"
-              style={{
-                position: "absolute",
-                left: "5px",
-                top: "5px",
-                width: mineral.radius * 2,
-                height: mineral.radius * 2,
-                borderRadius: "50%",
-              }}
+              alt=""
+              className="w-full h-full object-contain"
             />
           </div>
         ))}
       </div>
 
-      {/* Game Over Popup */}
+      {/* Game Over Modal */}
       {isGameOver && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 z-20">
-          <div className="bg-white text-black p-8 rounded shadow-lg w-full max-w-md">
-            <h2 className="text-2xl mb-4">Game Over!</h2>
-            <p className="mb-4">You scored: {score} coins</p>
-            <div className="overflow-y-auto max-h-48 mb-4">
-              {Object.entries(collectedMinerals).map(([image, count]) => (
-                <div key={image} className="flex items-center mb-2">
-                  <img src={image} alt="mineral" className="w-8 h-8 mr-2" />
-                  <span className="mr-2">{count}x</span>
-                  <span className="text-sm text-gray-600">({mineralsData.find((m) => m.image === image)?.value} coins each)</span>
-                </div>
-              ))}
-            </div>
-            <button
-              onClick={handleGameEnd}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none"
-            >
-              Go Back
-            </button>
-          </div>
+        <div className="absolute inset-0 bg-black bg-opacity-75 flex flex-col items-center justify-center z-30">
+          <h1 className="text-3xl mb-4">Game Over!</h1>
+          <p className="mb-6">Score: {score}</p>
+          <button className="btn btn-primary" onClick={handleGameEnd}>
+            Go to Main Menu
+          </button>
         </div>
       )}
     </div>
