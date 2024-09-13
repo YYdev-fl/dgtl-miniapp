@@ -234,30 +234,31 @@ const Game: React.FC = () => {
         {/* Render Minerals */}
         {minerals.map((mineral) => (
           <div
-            key={mineral.id}
-            id={`mineral-${mineral.id}`}
-            onClick={() =>
-              handleMineralClick(mineral.id, mineral.value, mineral.image)
-            }
-            style={{
-              position: "absolute",
-              left: mineral.x - 20,
-              top: mineral.y - 5,
-              width: mineral.radius * 2 + 15,
-              height: mineral.radius * 2 + 15,
-              cursor: "pointer",
-              transform: `rotate(${mineral.rotation}deg)`,
-              transition: "transform 0.1s",
-              pointerEvents: "auto",
-              touchAction: "manipulation",
-            }}
-          >
-            <img
-              src={mineral.image}
-              alt=""
-              className="w-full h-full object-contain"
-            />
-          </div>
+          key={mineral.id}
+          id={`mineral-${mineral.id}`}
+          onPointerDown={() =>
+            handleMineralClick(mineral.id, mineral.value, mineral.image)
+          }
+          style={{
+            position: "absolute",
+            left: mineral.x - 20,
+            top: mineral.y - 5,
+            width: mineral.radius * 2 + 15,
+            height: mineral.radius * 2 + 15,
+            cursor: "pointer",
+            transform: `rotate(${mineral.rotation}deg)`,
+            transition: "transform 0.1s",
+            pointerEvents: "auto",
+            touchAction: "manipulation",
+          }}
+        >
+          <img
+            src={mineral.image}
+            alt=""
+            className="w-full h-full object-contain"
+          />
+        </div>
+        
         ))}
       </div>
 
