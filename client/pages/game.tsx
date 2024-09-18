@@ -35,6 +35,16 @@ const Game: React.FC = () => {
   const lastTimeRef = useRef<number>(0);
   const router = useRouter();
 
+  useEffect(() => {
+    // Check if Telegram API is available
+    if (typeof window !== 'undefined' && window.Telegram) {
+      // Initialize the Telegram WebApp
+      window.Telegram.WebApp.ready();
+    } else {
+      console.log("Telegram WebApp not found");
+    }
+  }, []); 
+
   // Preload images and video for the game
   const preloadImage = (src: string) => {
     return new Promise<void>((resolve, reject) => {
@@ -168,7 +178,7 @@ const Game: React.FC = () => {
   // Handle mineral click
   const handleMineralClick = useCallback((id: number, value: number, image: string) => {
 
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp?.hapticFeedback) {
+    if (window.Telegram?.WebApp?.hapticFeedback) {
       window.Telegram.WebApp.hapticFeedback.impactOccurred('medium');
     }
 
