@@ -167,6 +167,11 @@ const Game: React.FC = () => {
 
   // Handle mineral click
   const handleMineralClick = useCallback((id: number, value: number, image: string) => {
+
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp?.hapticFeedback) {
+      window.Telegram.WebApp.hapticFeedback.impactOccurred('medium');
+    }
+
     setMinerals((prevMinerals) => prevMinerals.filter((mineral) => mineral.id !== id));
     setScore((prevScore) => prevScore + value);
     setCollectedMinerals((prev) => ({
