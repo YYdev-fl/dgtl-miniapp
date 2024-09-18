@@ -165,10 +165,20 @@ const Game: React.FC = () => {
     }
   }, [timeLeft, isGameOver]);
 
-  // Handle mineral click
+  // Handle mineral click with vibration
   const handleMineralClick = useCallback((id: number, value: number, image: string) => {
+    // Trigger vibration if supported
+    if (navigator.vibrate) {
+      navigator.vibrate(200); // Vibrate for 200ms
+    }
+
+    // Remove the clicked mineral
     setMinerals((prevMinerals) => prevMinerals.filter((mineral) => mineral.id !== id));
+
+    // Update score
     setScore((prevScore) => prevScore + value);
+
+    // Track collected minerals
     setCollectedMinerals((prev) => ({
       ...prev,
       [image]: {
@@ -234,61 +244,47 @@ const Game: React.FC = () => {
         {/* Render Minerals */}
         {minerals.map((mineral) => (
           <div
-          key={mineral.id}
-          id={`mineral-${mineral.id}`}
-          onPointerDown={() =>
-            handleMineralClick(mineral.id, mineral.value, mineral.image)
-          }
-          style={{
-            position: "absolute",
-            left: mineral.x - 20,
-            top: mineral.y - 5,
-            width: mineral.radius * 2 + 15,
-            height: mineral.radius * 2 + 15,
-            cursor: "pointer",
-            transform: `rotate(${mineral.rotation}deg)`,
-            transition: "transform 0.1s",
-            pointerEvents: "auto",
-            touchAction: "manipulation",
-          }}
-        >
-          <img
-            src={mineral.image}
-            alt=""
-            className="w-full h-full object-contain"
-          />
-        </div>
-        
+            key={mineral.id}
+            id={`mineral-${mineral.id}`}
+            onPointerDown={() =>
+              handleMineralClick(mineral.id, mineral.value, mineral.image)
+            }
+            style={{
+              position: "absolute",
+              left: mineral.x - 20,
+              top: mineral.y - 5,
+              width: mineral.radius * 2 + 15,
+              height: mineral.radius * 2 + 15,
+              cursor: "pointer",
+              transform: `rotate(${mineral.rotation}deg)`,
+              transition: "transform 0.1s",
+              pointerEvents: "auto",
+              touchAction: "manipulation",
+            }}
+          >
+            <img
+              src={mineral.image}
+              alt={`Mineral ${mineral.value}`}
+              style={{
+                width: mineral.radius * 2,
+                height: mineral.radius * 2,
+                objectFit: "contain",
+              }}
+            />
+          </div>
         ))}
       </div>
 
-      {/* Game Over Modal */}
+      {/* Game Over Popup */}
       {isGameOver && (
-        <div className="absolute inset-0 bg-black  flex flex-col items-center justify-center z-30 p-6">
-          <h2 className="text-2xl  font-bold">Insane!</h2>
-          <h2 className="text-2xl mb-5 font-bold">How you got so much?  </h2>
-          <h1 className="text-4xl font-bold mb-4">{totalCollectedValue} GTL</h1>
-          <p className="mb-4">Earned</p>
-          
-          
-
-
-          {/* Display Collected Minerals */}
-          <div className="card bg-neutral grid grid-cols-3 gap-2 mb-6 p-3">
-            {Object.entries(collectedMinerals).map(([image, { count, value }]) => (
-              <div key={image} className="flex flex-col items-center justify-center bg-secondary p-2 rounded-xl gap-3">
-                <img src={image} alt="" className="w-10 h-10" />
-                <div className="text-xs">
-                  <p>Collected: {count}</p>
-                  <p>Value: {count * value} GTL</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-
-          <button className="btn btn-base-100 border-2 border-accent shadow-glow  text-lg" onClick={handleGameEnd}>
-            Go to Main Menu
+        <div className="absolute inset-0 bg-base-100 bg-opacity-90 z-30 flex flex-col items-center justify-center text-center">
+          <h1 className="text-5xl font-bold mb-4">Game Over!</h1>
+          <p className="text-2xl mb-8">
+            Your Score: {score} <br />
+            Total Collected Value: {totalCollectedValue}
+          </p>
+          <button className="btn btn-primary btn-lg" onClick={handleGameEnd}>
+            Back to Home
           </button>
         </div>
       )}
