@@ -274,10 +274,10 @@ const Game: React.FC = () => {
 
 
           {/* Display Collected Minerals */}
-          <div className="card bg-neutral grid grid-cols-3 gap-2 mb-6 p-2">
+          <div className="card bg-neutral grid grid-cols-3 gap-2 mb-6 p-3">
             {Object.entries(collectedMinerals).map(([image, { count, value }]) => (
-              <div key={image} className="flex flex-col items-center justify-center bg-secondary p-2 rounded-xl">
-                <img src={image} alt="" className="w-10 h-10 mr-4 mb-2  " />
+              <div key={image} className="flex flex-col items-center justify-center bg-secondary p-2 rounded-xl gap-3">
+                <img src={image} alt="" className="w-10 h-10" />
                 <div className="text-xs">
                   <p>Collected: {count}</p>
                   <p>Value: {count * value} GTL</p>

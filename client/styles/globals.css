@@ -1,3 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+font-family: 'VG5000';
+src: url('/fonts/VG5000-regular.otf') format('opentype');
+font-weight: normal;
+font-style: normal;
+}
+
+/* styles/globals.css */
+html, body {
+    @apply font-vg5000;
+  }
+  
+  
