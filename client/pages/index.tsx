@@ -23,18 +23,27 @@ function Index() {
         // Decode the URL-encoded data
         const decodedData = decodeURIComponent(tgWebAppData);
         
-        try {
-          // Convert the JSON string into an object
-          const dataObject = JSON.parse(decodedData);
-          
-          // Display the decoded data using alert
-          alert(`Decoded Data:\n${JSON.stringify(dataObject, null, 2)}`); // Display formatted JSON
-          
-          // Log the decoded data object in the console for debugging
-          console.log("Decoded Data Object:", dataObject);
-        } catch (error) {
-          alert("Failed to parse JSON data: " + error);
-        }
+        // Create a URLSearchParams object from the decoded data
+        const dataParams = new URLSearchParams(decodedData);
+        
+        // Initialize dataObject with an appropriate type
+        const dataObject: Record<string, any> = {};
+  
+        // Populate dataObject with values from dataParams
+        dataParams.forEach((value, key) => {
+          // Try to parse each value as JSON if possible
+          try {
+            dataObject[key] = JSON.parse(value);
+          } catch {
+            dataObject[key] = value;
+          }
+        });
+        
+        // Display the parsed data using alert
+        alert(`Decoded Data:\n${JSON.stringify(dataObject, null, 2)}`);
+        
+        // Log the parsed data object in the console for debugging
+        console.log("Decoded Data Object:", dataObject);
       } else {
         alert("No tgWebAppData found in URL");
       }
@@ -42,6 +51,7 @@ function Index() {
       alert("Telegram WebApp not found or not available");
     }
   }, []);
+  
   
 
   return (
