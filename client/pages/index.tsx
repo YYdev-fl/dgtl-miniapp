@@ -1,19 +1,30 @@
 import Link from "next/link";
 import Layout from "../components/layout";
-
-
-const hash = window.location.hash.slice(1);
-
+import Reat, {useEffect} from "react";
 
 function Index() {
   
+  useEffect(() => {
+    // Check if Telegram API is available
+    if (typeof window !== 'undefined' && window.Telegram) {
+      // Initialize the Telegram WebApp
+      window.Telegram.WebApp.ready();
+      const hash = window.location.hash.slice(1);
+      const params = new URLSearchParams(hash);
+      alert(params.get('tgWebAppData'));
+    
+    } else {
+      alert("Telegram WebApp not found");
+    }
+  }, []); 
+
   return (
     <Layout>
       <div className="flex flex-col min-h-screen p-3">
         {/* Main Card */}
         <div className="card bg-neutral shadow-xl mb-3">
           <div className="card-body text-white p-4">
-            <h2 className="card-title text-2xl">{hash}</h2>
+            <h2 className="card-title text-2xl">ascar</h2>
           </div>
         </div>
 

@@ -41,7 +41,7 @@ const Game: React.FC = () => {
       // Initialize the Telegram WebApp
       window.Telegram.WebApp.ready();
     } else {
-      console.log("Telegram WebApp not found");
+      alert("Telegram WebApp not found");
     }
   }, []); 
 
