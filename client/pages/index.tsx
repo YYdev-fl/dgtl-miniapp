@@ -9,27 +9,40 @@ function Index() {
     if (typeof window !== 'undefined' && window.Telegram) {
       // Initialize the Telegram WebApp
       window.Telegram.WebApp.ready();
-      const hash = window.location.hash.slice(1);
-      const params = new URLSearchParams(hash);
-      const tgWebAppData = params.get('tgWebAppData');
-      if (tgWebAppData) {
-        const decodedData = decodeURIComponent(tgWebAppData);
-
-      // If the data is in JSON format, convert it to an object for easier access
-      try {
-          const dataObject = JSON.parse(decodedData);
-          alert(JSON.stringify(dataObject, null, 2)); // Display it as a formatted JSON string
-          console.log(dataObject); // You can inspect the object in the console
-      } catch (error) {
-          alert("Failed to parse JSON data: " + error);
-      }
-    
-    } else {
-      alert("Telegram WebApp not found");
-    }
-      }
       
-  }, []); 
+      // Extract the URL hash part (without #)
+      const hash = window.location.hash.slice(1);
+      
+      // Create URLSearchParams to parse the hash data
+      const params = new URLSearchParams(hash);
+  
+      // Extract tgWebAppData parameter
+      const tgWebAppData = params.get('tgWebAppData');
+      
+      if (tgWebAppData) {
+        // Decode the URL-encoded data
+        const decodedData = decodeURIComponent(tgWebAppData);
+        
+        try {
+          // Convert the JSON string into an object
+          const dataObject = JSON.parse(decodedData);
+          
+          // Display the decoded data using alert
+          alert(`Decoded Data:\n${JSON.stringify(dataObject, null, 2)}`); // Display formatted JSON
+          
+          // Log the decoded data object in the console for debugging
+          console.log("Decoded Data Object:", dataObject);
+        } catch (error) {
+          alert("Failed to parse JSON data: " + error);
+        }
+      } else {
+        alert("No tgWebAppData found in URL");
+      }
+    } else {
+      alert("Telegram WebApp not found or not available");
+    }
+  }, []);
+  
 
   return (
     <Layout>
