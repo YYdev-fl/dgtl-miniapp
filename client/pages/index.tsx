@@ -11,11 +11,24 @@ function Index() {
       window.Telegram.WebApp.ready();
       const hash = window.location.hash.slice(1);
       const params = new URLSearchParams(hash);
-      alert(params.get('tgWebAppData'));
+      const tgWebAppData = params.get('tgWebAppData');
+      if (tgWebAppData) {
+        const decodedData = decodeURIComponent(tgWebAppData);
+
+      // If the data is in JSON format, convert it to an object for easier access
+      try {
+          const dataObject = JSON.parse(decodedData);
+          alert(JSON.stringify(dataObject, null, 2)); // Display it as a formatted JSON string
+          console.log(dataObject); // You can inspect the object in the console
+      } catch (error) {
+          alert("Failed to parse JSON data: " + error);
+      }
     
     } else {
       alert("Telegram WebApp not found");
     }
+      }
+      
   }, []); 
 
   return (
