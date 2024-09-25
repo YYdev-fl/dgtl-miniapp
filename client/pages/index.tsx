@@ -1,6 +1,10 @@
 import Link from "next/link";
 import Layout from "../components/layout";
 
+
+const hash = window.location.hash.slice(1);
+
+
 function Index() {
   
   return (
@@ -9,7 +13,7 @@ function Index() {
         {/* Main Card */}
         <div className="card bg-neutral shadow-xl mb-3">
           <div className="card-body text-white p-4">
-            <h2 className="card-title text-2xl">ascar</h2>
+            <h2 className="card-title text-2xl">{hash}</h2>
           </div>
         </div>
 
