@@ -7,11 +7,11 @@ interface Mineral {
   x: number;
   y: number;
   radius: number;
-  speed: number; // Pixels per second
+  speed: number; 
   rotationSpeed: number;
   rotation: number;
   image: string;
-  value: number; // Value in coins
+  value: number;
 }
 
 // Define each mineral's data with its image, value, and rotation speed

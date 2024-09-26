@@ -3,57 +3,6 @@ import Layout from "../components/layout";
 import Reat, {useEffect} from "react";
 
 function Index() {
-  
-  useEffect(() => {
-    // Check if Telegram API is available
-    if (typeof window !== 'undefined' && window.Telegram) {
-      // Initialize the Telegram WebApp
-      window.Telegram.WebApp.ready();
-      
-      // Extract the URL hash part (without #)
-      const hash = window.location.hash.slice(1);
-      
-      // Create URLSearchParams to parse the hash data
-      const params = new URLSearchParams(hash);
-  
-      // Extract tgWebAppData parameter
-      const tgWebAppData = params.get('tgWebAppData');
-      
-      if (tgWebAppData) {
-        // Decode the URL-encoded data
-        const decodedData = decodeURIComponent(tgWebAppData);
-        
-        // Create a URLSearchParams object from the decoded data
-        const dataParams = new URLSearchParams(decodedData);
-        
-        // Initialize dataObject with an appropriate type
-        const dataObject: Record<string, any> = {};
-  
-        // Populate dataObject with values from dataParams
-        dataParams.forEach((value, key) => {
-          // Try to parse each value as JSON if possible
-          try {
-            dataObject[key] = JSON.parse(value);
-          } catch {
-            dataObject[key] = value;
-          }
-        });
-        
-        // Display the parsed data using alert
-        alert(`Decoded Data:\n${JSON.stringify(dataObject, null, 2)}`);
-        
-        // Log the parsed data object in the console for debugging
-        console.log("Decoded Data Object:", dataObject);
-      } else {
-        alert("No tgWebAppData found in URL");
-      }
-    } else {
-      alert("Telegram WebApp not found or not available");
-    }
-  }, []);
-  
-  
-
   return (
     <Layout>
       <div className="flex flex-col min-h-screen p-3">
