@@ -16,10 +16,12 @@ const Index = () => {
         if (initDataRaw) {
           const initData = new URLSearchParams(initDataRaw);
           const userRaw = initData.get('user');
-          alert(initDataRaw);
+          
 
           if (userRaw) {
             const user = JSON.parse(userRaw);
+            alert(user)
+            alert(JSON.stringify(user))
             // Sign in using the parsed user data via Telegram credentials
             signIn('credentials', { initData: JSON.stringify(user) });
           } else {
