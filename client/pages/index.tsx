@@ -1,15 +1,38 @@
-import Link from "next/link";
-import Layout from "../components/layout";
-import Reat, {useEffect} from "react";
+import { useSession, signIn } from 'next-auth/react';
+import { useEffect } from 'react';
+import Layout from '../components/layout';
+import Link from 'next/link';
 
-function Index() {
+const Index = () => {
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      // Check if initData is available (from Telegram)
+      const urlParams = new URLSearchParams(window.location.search);
+      const initData = urlParams.get('initData');
+
+      if (initData) {
+        // If initData is available, initiate login via Telegram credentials
+        signIn('credentials', { initData });
+      } else {
+        // Redirect to error page if initData is missing
+        window.location.href = '/auth/error';
+      }
+    }
+  }, [status]);
+
+  if (status === 'loading') {
+    return <div>Loading...</div>;
+  }
   return (
     <Layout>
+      
       <div className="flex flex-col min-h-screen p-3">
         {/* Main Card */}
         <div className="card bg-neutral shadow-xl mb-3">
           <div className="card-body text-white p-4">
-            <h2 className="card-title text-2xl">ascar</h2>
+            <h2 className="card-title text-2xl">{session?.user.username}</h2>
           </div>
         </div>
 
@@ -59,14 +82,8 @@ function Index() {
               </Link>
             </div>
           </div>
-
-
-            
-            
           </div>
         </div>
-
-        
       </div>
     </Layout>
   );
