@@ -54,20 +54,18 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
       }),
     ],
     callbacks: {
-      async session({ session, user }) {
-        // Attach user object to session
+      async session({ session, token }) {
         session.user = {
           ...session.user,
-          id: user.id,
-          telegramId: user.telegramId,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          username: user.username,
+          id: token.id,
+          telegramId: token.telegramId,
+          firstName: token.firstName,
+          lastName: token.lastName,
+          username: token.username,
         };
         return session;
       },
       async jwt({ token, user }) {
-        // Attach user object to token for persistence
         if (user) {
           token.id = user.id;
           token.telegramId = user.telegramId;

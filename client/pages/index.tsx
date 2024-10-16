@@ -14,7 +14,7 @@ const Index = () => {
 
       if (initDataRaw) {
         // If initData is available, initiate login via Telegram credentials
-        signIn('credentials', { initDataRaw });
+        signIn('credentials', { initData: JSON.stringify(initDataRaw) });
       } else {
         // Redirect to error page if initData is missing
         window.location.href = '/auth/error';
