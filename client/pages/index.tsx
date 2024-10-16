@@ -19,8 +19,8 @@ const Index = () => {
 
           if (userRaw) {
             const user = JSON.parse(userRaw);
-            alert(user)
-            alert(JSON.stringify(user))
+            console.log(user)
+            console.log(JSON.stringify(user))
             signIn('credentials', { initData: JSON.stringify(user) });
           } else {
             window.location.href = '/auth/error';
