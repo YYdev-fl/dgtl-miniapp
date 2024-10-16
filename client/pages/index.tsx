@@ -9,7 +9,6 @@ const Index = () => {
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      // Safely access Telegram WebApp data
       if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
         const initDataRaw = window.Telegram.WebApp.initData;
 
@@ -22,7 +21,6 @@ const Index = () => {
             const user = JSON.parse(userRaw);
             alert(user)
             alert(JSON.stringify(user))
-            // Sign in using the parsed user data via Telegram credentials
             signIn('credentials', { initData: JSON.stringify(user) });
           } else {
             window.location.href = '/auth/error';

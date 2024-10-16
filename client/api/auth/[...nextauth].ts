@@ -17,7 +17,7 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
           try {
             const initData = credentials?.initData;
             if (!initData) {
-              alert('Missing Telegram Init Data');
+              console.log('Missing Telegram Init Data');
               throw new Error('Missing Telegram Init Data');
             }
 
@@ -25,32 +25,31 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
             try {
               telegramUser = JSON.parse(initData);
               if (!telegramUser) {
-                alert('Parsed user data is missing');
+                console.log('Parsed user data is missing');
                 throw new Error('Parsed user data is missing');
               }
             } catch (error) {
-              // Cast 'error' to a known type (Error) so TypeScript knows how to handle it
               if (error instanceof Error) {
-                alert('Error parsing initData: ' + error.message);
+                console.log('Error parsing initData:', error.message);
               } else {
-                alert('Unknown error occurred while parsing initData');
+                console.log('Unknown error occurred while parsing initData');
               }
               throw new Error('Invalid Telegram Init Data format');
             }
 
             const telegramId = telegramUser?.id;
             if (!telegramId) {
-              alert('Missing Telegram ID');
+              console.log('Missing Telegram ID');
               throw new Error('Telegram user ID is missing');
             }
 
-            alert(`User ID: ${telegramId}, Name: ${telegramUser?.first_name}`);
+            console.log(`User ID: ${telegramId}, Name: ${telegramUser?.first_name}`);
 
             await connectToDatabase();
             let user = await User.findOne({ telegramId });
 
             if (!user) {
-              alert('User not found, creating new user...');
+              console.log('User not found, creating new user...');
               user = new User({
                 telegramId,
                 firstName: telegramUser?.first_name || '',
@@ -59,7 +58,7 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
               });
               await user.save();
             } else {
-              alert('User found in the database');
+              console.log('User found in the database');
             }
 
             // Return the user object
@@ -71,11 +70,10 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
               username: user.username,
             };
           } catch (error) {
-            // Type guard to handle 'unknown' type for error
             if (error instanceof Error) {
-              alert('Authorization failed: ' + error.message);
+              console.log('Authorization failed:', error.message);
             } else {
-              alert('Unknown error occurred during authorization');
+              console.log('Unknown error occurred during authorization');
             }
             return null; // Return null to indicate failed login
           }
@@ -107,5 +105,3 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
     },
   });
 }
-
-
