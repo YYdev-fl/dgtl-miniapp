@@ -11,52 +11,74 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
       CredentialsProvider({
         name: 'Telegram',
         credentials: {
-          initData: { label: 'Telegram Init Data', type: 'text' }
+          initData: { label: 'Telegram Init Data', type: 'text' },
         },
         async authorize(credentials) {
-          const initData = credentials?.initData;
-          if (!initData) {
-            throw new Error('Missing Telegram Init Data');
-          }
-
-          let telegramUser;
           try {
-            telegramUser = JSON.parse(initData).user;
+            const initData = credentials?.initData;
+            if (!initData) {
+              alert('Missing Telegram Init Data');
+              throw new Error('Missing Telegram Init Data');
+            }
+
+            let telegramUser;
+            try {
+              telegramUser = JSON.parse(initData).user;
+              if (!telegramUser) {
+                alert('Parsed user data is missing');
+                throw new Error('Parsed user data is missing');
+              }
+            } catch (error) {
+              // Cast 'error' to a known type (Error) so TypeScript knows how to handle it
+              if (error instanceof Error) {
+                alert('Error parsing initData: ' + error.message);
+              } else {
+                alert('Unknown error occurred while parsing initData');
+              }
+              throw new Error('Invalid Telegram Init Data format');
+            }
+
+            const telegramId = telegramUser?.id;
+            if (!telegramId) {
+              alert('Missing Telegram ID');
+              throw new Error('Telegram user ID is missing');
+            }
+
+            alert(`User ID: ${telegramId}, Name: ${telegramUser?.first_name}`);
+
+            await connectToDatabase();
+            let user = await User.findOne({ telegramId });
+
+            if (!user) {
+              alert('User not found, creating new user...');
+              user = new User({
+                telegramId,
+                firstName: telegramUser?.first_name || '',
+                lastName: telegramUser?.last_name || '',
+                username: telegramUser?.username || '',
+              });
+              await user.save();
+            } else {
+              alert('User found in the database');
+            }
+
+            // Return the user object
+            return {
+              id: user._id.toString(),
+              telegramId: user.telegramId,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              username: user.username,
+            };
           } catch (error) {
-            throw new Error('Invalid Telegram Init Data format');
+            // Type guard to handle 'unknown' type for error
+            if (error instanceof Error) {
+              alert('Authorization failed: ' + error.message);
+            } else {
+              alert('Unknown error occurred during authorization');
+            }
+            return null; // Return null to indicate failed login
           }
-
-          const telegramId = telegramUser?.id;
-          const firstName = telegramUser?.first_name || '';
-          const lastName = telegramUser?.last_name || '';
-          const username = telegramUser?.username || '';
-
-          if (!telegramId) {
-            throw new Error('Telegram user ID is missing');
-          }
-
-          await connectToDatabase();
-
-          let user = await User.findOne({ telegramId });
-
-          if (!user) {
-            user = new User({
-              telegramId,
-              firstName,
-              lastName,
-              username,
-            }) as IUser;
-            await user.save();
-          }
-
-          // Return the user object
-          return {
-            id: user._id.toString(), // Ensure the MongoDB _id is converted to a string
-            telegramId: user.telegramId,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            username: user.username,
-          };
         },
       }),
     ],
@@ -85,3 +107,5 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
     },
   });
 }
+
+
