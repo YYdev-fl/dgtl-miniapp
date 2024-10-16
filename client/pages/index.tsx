@@ -9,14 +9,19 @@ const Index = () => {
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      // Check if initData is available (from Telegram)
-      const { initDataRaw } = retrieveLaunchParams();
+      // Try to retrieve initData from the Telegram WebApp
+      const initDataRaw = window.Telegram.WebApp?.initData;
 
       if (initDataRaw) {
-        // If initData is available, initiate login via Telegram credentials
-        signIn('credentials', { initData: JSON.stringify(initDataRaw) });
+        const initData = new URLSearchParams(initDataRaw);
+        const userRaw = initData.get('user');
+        if (userRaw) {
+          const user = JSON.parse(userRaw);
+          signIn('credentials', { initData: JSON.stringify(user) });
+        } else {
+          window.location.href = '/auth/error';
+        }
       } else {
-        // Redirect to error page if initData is missing
         window.location.href = '/auth/error';
       }
     }
