@@ -19,20 +19,27 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
             throw new Error('Missing Telegram Init Data');
           }
 
-          const { user: telegramUser } = JSON.parse(initData); 
+          let telegramUser;
+          try {
+            telegramUser = JSON.parse(initData).user;
+          } catch (error) {
+            throw new Error('Invalid Telegram Init Data format');
+          }
 
-          const telegramId = telegramUser.id;
-          const firstName = telegramUser.first_name;
-          const lastName = telegramUser.last_name || '';
-          const username = telegramUser.username || '';
+          const telegramId = telegramUser?.id;
+          const firstName = telegramUser?.first_name || '';
+          const lastName = telegramUser?.last_name || '';
+          const username = telegramUser?.username || '';
+
+          if (!telegramId) {
+            throw new Error('Telegram user ID is missing');
+          }
 
           await connectToDatabase();
 
-        
           let user = await User.findOne({ telegramId });
 
           if (!user) {
-     
             user = new User({
               telegramId,
               firstName,
@@ -44,7 +51,7 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
 
           // Return the user object
           return {
-            id: user._id,
+            id: user._id.toString(), // Ensure the MongoDB _id is converted to a string
             telegramId: user.telegramId,
             firstName: user.firstName,
             lastName: user.lastName,

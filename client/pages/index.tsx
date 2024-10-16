@@ -9,20 +9,26 @@ const Index = () => {
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      // Try to retrieve initData from the Telegram WebApp
-      const initDataRaw = window.Telegram.WebApp?.initData;
+      // Safely access Telegram WebApp data
+      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+        const initDataRaw = window.Telegram.WebApp.initData;
 
-      if (initDataRaw) {
-        const initData = new URLSearchParams(initDataRaw);
-        const userRaw = initData.get('user');
-        if (userRaw) {
-          const user = JSON.parse(userRaw);
-          signIn('credentials', { initData: JSON.stringify(user) });
+        if (initDataRaw) {
+          const initData = new URLSearchParams(initDataRaw);
+          const userRaw = initData.get('user');
+
+          if (userRaw) {
+            const user = JSON.parse(userRaw);
+            // Sign in using the parsed user data via Telegram credentials
+            signIn('credentials', { initData: JSON.stringify(user) });
+          } else {
+            window.location.href = '/auth/error';
+          }
         } else {
-          window.location.href = '/auth/error';
+          window.location.href = '/auth/error1';
         }
       } else {
-        window.location.href = '/auth/error';
+        window.location.href = '/auth/error2';
       }
     }
   }, [status]);
