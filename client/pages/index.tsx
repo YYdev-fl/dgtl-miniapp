@@ -1,5 +1,6 @@
 import { useSession, signIn } from 'next-auth/react';
 import { useEffect } from 'react';
+import { retrieveLaunchParams } from '@telegram-apps/sdk';
 import Layout from '../components/layout';
 import Link from 'next/link';
 
@@ -9,12 +10,11 @@ const Index = () => {
   useEffect(() => {
     if (status === 'unauthenticated') {
       // Check if initData is available (from Telegram)
-      const urlParams = new URLSearchParams(window.location.search);
-      const initData = urlParams.get('initData');
+      const { initDataRaw } = retrieveLaunchParams();
 
-      if (initData) {
+      if (initDataRaw) {
         // If initData is available, initiate login via Telegram credentials
-        signIn('credentials', { initData });
+        signIn('credentials', { initDataRaw });
       } else {
         // Redirect to error page if initData is missing
         window.location.href = '/auth/error';
