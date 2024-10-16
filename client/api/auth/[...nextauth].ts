@@ -23,7 +23,7 @@ export default async function auth(req: NextApiRequest, res: NextApiResponse) {
 
             let telegramUser;
             try {
-              telegramUser = JSON.parse(initData).user;
+              telegramUser = JSON.parse(initData);
               if (!telegramUser) {
                 alert('Parsed user data is missing');
                 throw new Error('Parsed user data is missing');
