@@ -16,6 +16,7 @@ const Index = () => {
         if (initDataRaw) {
           const initData = new URLSearchParams(initDataRaw);
           const userRaw = initData.get('user');
+          alert(initDataRaw);
 
           if (userRaw) {
             const user = JSON.parse(userRaw);
