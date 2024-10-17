@@ -284,9 +284,6 @@ const Game: React.FC = () => {
           <h2 className="text-2xl mb-5 font-bold">How you got so much?  </h2>
           <h1 className="text-4xl font-bold mb-4">{totalCollectedValue} GTL</h1>
           <p className="mb-4">Earned</p>
-          
-          
-
 
           {/* Display Collected Minerals */}
           <div className="card bg-neutral grid grid-cols-3 gap-2 mb-6 p-3">

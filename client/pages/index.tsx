@@ -1,45 +1,27 @@
-import { useSession, signIn } from 'next-auth/react';
-import { useEffect } from 'react';
-import { retrieveLaunchParams } from '@telegram-apps/sdk';
+import { useSession } from 'next-auth/react';
 import Layout from '../components/layout';
 import Link from 'next/link';
 
 const Index = () => {
   const { data: session, status } = useSession();
 
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-        const initDataRaw = window.Telegram.WebApp.initData;
-
-        if (initDataRaw) {
-          const initData = new URLSearchParams(initDataRaw);
-          const userRaw = initData.get('user');
-          
-
-          if (userRaw) {
-            const user = JSON.parse(userRaw);
-            console.log(user)
-            console.log(JSON.stringify(user))
-            signIn('credentials', { initData: JSON.stringify(user) });
-          } else {
-            window.location.href = '/auth/error';
-          }
-        } else {
-          window.location.href = '/auth/error1';
-        }
-      } else {
-        window.location.href = '/auth/error2';
-      }
-    }
-  }, [status]);
-
   if (status === 'loading') {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen w-screen bg-base-100">
+        <div className="loading loading-spinner loading-lg mb-4"></div>
+      </div>
+    );
   }
+
+  if (status === 'unauthenticated') {
+    if (typeof window !== 'undefined') {
+      window.location.href = '/authpage';
+    }
+    return null;
+  }
+
   return (
     <Layout>
-      
       <div className="flex flex-col min-h-screen p-3">
         {/* Main Card */}
         <div className="card bg-neutral shadow-xl mb-3">
@@ -67,38 +49,37 @@ const Index = () => {
 
             {/* Level 1 */}
             <div className="relative bg-neutral-content rounded-lg mb-2 shadow-inner overflow-hidden">
-            {/* Badge Container */}
-            <div className="flex absolute top-2 left-2 flex-wrap gap-2 z-10"> {/* Positioning badges */}
-              <div className="badge badge-outline">Au</div>
-              <div className="badge badge-outline">Fe</div>
-              <div className="badge badge-outline">C</div>
-              <div className="badge badge-outline">Br</div>
-              
-            </div>
-
-            {/* Background Image */}
-            <img
-              src="/level1-bg.png"
-              alt="Level 1"
-              className="h-[150px] w-full object-cover"
-            />
-
-            {/* Bottom Content */}
-            <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black to-transparent flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-bold text-white">Level 1</h2>
-                <p className="text-m font-bold">10 ⛏</p>
+              {/* Badge Container */}
+              <div className="flex absolute top-2 left-2 flex-wrap gap-2 z-10">
+                <div className="badge badge-outline">Au</div>
+                <div className="badge badge-outline">Fe</div>
+                <div className="badge badge-outline">C</div>
+                <div className="badge badge-outline">Br</div>
               </div>
-              <Link href="/game">
-                <button className="btn btn-md border-2 border-accent shadow-glow">Play</button>
-              </Link>
+
+              {/* Background Image */}
+              <img
+                src="/level1-bg.png"
+                alt="Level 1"
+                className="h-[150px] w-full object-cover"
+              />
+
+              {/* Bottom Content */}
+              <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black to-transparent flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-white">Level 1</h2>
+                  <p className="text-m font-bold">10 ⛏</p>
+                </div>
+                <Link href="/game">
+                  <button className="btn btn-md border-2 border-accent shadow-glow">Play</button>
+                </Link>
+              </div>
             </div>
-          </div>
           </div>
         </div>
       </div>
     </Layout>
   );
-}
+};
 
 export default Index;
