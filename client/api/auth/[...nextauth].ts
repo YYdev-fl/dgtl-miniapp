@@ -3,7 +3,6 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { connectToDatabase } from '../../lib/mongodb';
 import User from '../../models/User';
-import { IUser } from '../../models/User';
 
 export default async function auth(req: NextApiRequest, res: NextApiResponse) {
   try {
