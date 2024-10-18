@@ -89,10 +89,15 @@ function verifyTelegramData(initData: string): TelegramUser {
   const hash = initDataParams.get('hash');
   initDataParams.delete('hash');
 
+  console.log(initDataParams)
+  console.log(hash)
+
   const dataCheckString = Array.from(initDataParams.entries())
     .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([key, value]) => `${key}=${value}`)
     .join('\n');
+
+  console.log(dataCheckString)
 
   const secretKey = crypto.createHash('sha256').update(BOT_TOKEN).digest();
   const computedHash = crypto
@@ -100,6 +105,9 @@ function verifyTelegramData(initData: string): TelegramUser {
     .update(dataCheckString)
     .digest('hex');
 
+    console.log(secretKey)
+    console.log(computedHash)
+    console.log(hash)
   if (computedHash !== hash) {
     throw new Error('Invalid Telegram init data');
   }
