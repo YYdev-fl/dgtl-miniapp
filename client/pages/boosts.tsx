@@ -192,11 +192,7 @@ const Index: React.FC = () => {
             src={card.imageUrl}
             className="w-22 h-22 object-contain mr-4 rounded-xl"
           />
-          {/* <div className="flex-1">
-            <h3 className="font-bold text-lg">{card.title}</h3>
-            <p className="font-semibold">{card.price}</p>
-            <p className="text-sm">{card.weight}</p>
-          </div> */}
+
         </div>
       ))}
     </div>

@@ -1,44 +1,48 @@
 import { useSession, signIn } from 'next-auth/react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import Layout from '../components/layout';
-import Link from 'next/link';
+
 
 const AuthPage = () => {
   const { status } = useSession();
   const router = useRouter();
-
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-        let initDataRaw = window.Telegram.WebApp.initData;
+    const authenticate = async () => {
+      if (status === 'unauthenticated') {
+        if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+          let initDataRaw = window.Telegram.WebApp.initData;
 
-        if (!initDataRaw) {
-          // Simulate Telegram data for testing in Chrome
-          console.log('Simulating Telegram data for development');
-          initDataRaw = 'user={"id":123456,"first_name":"John","username":"johndoe"}';
-        }
+          if (!initDataRaw) {
+            // Simulate Telegram data for testing in Chrome
+            console.log('Simulating Telegram data for development');
+            initDataRaw = 'user={"id":123456,"first_name":"John","username":"johndoe"}';
+          }
 
-        if (initDataRaw) {
-          const initData = new URLSearchParams(initDataRaw);
-          const userRaw = initData.get('user');
-
-          if (userRaw) {
-            const user = JSON.parse(userRaw);
-            signIn('credentials', { initData: JSON.stringify(user) });
+          if (initDataRaw) {
+            console.log('Signing in with initDataRaw:', initDataRaw);
+            signIn('credentials', { initData: initDataRaw });
           } else {
-            window.location.href = '/auth/error';
+            window.location.href = '/auth/error1';
           }
         } else {
-          window.location.href = '/auth/error1';
+          window.location.href = '/auth/error2';
         }
-      } else {
-        window.location.href = '/auth/error2';
+      } else if (status === 'authenticated') {
+        router.push('/');
       }
-    } else if (status === 'authenticated') {
-      router.push('/');
-    }
+    };
+
+    authenticate();
   }, [status, router]);
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen w-screen bg-base-100">
+        <div className="text-red-500 text-lg">{error}</div>
+      </div>
+    );
+  }
 
   if (status === 'loading') {
     return <div className="flex items-center justify-center h-screen w-screen bg-base-100">
