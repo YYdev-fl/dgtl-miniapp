@@ -2,6 +2,16 @@ import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { connectToDatabase } from '../../../lib/mongodb';
 import User from '../../../models/User';
+import crypto from 'crypto';
+
+interface TelegramUser {
+  id: number;
+  first_name: string;
+  last_name?: string;
+  username?: string;
+  photo_url?: string;
+  language_code?: string;
+}
 
 export default NextAuth({
   providers: [
@@ -13,59 +23,16 @@ export default NextAuth({
       async authorize(credentials) {
         try {
           const initData = credentials?.initData;
-          console.log('Received initData:', initData);
-
           if (!initData) {
-            console.log('Missing Telegram Init Data');
             throw new Error('Missing Telegram Init Data');
           }
 
-          // Parse initData as URLSearchParams
-          const initDataParams = new URLSearchParams(initData);
-          const userRaw = initDataParams.get('user');
-          console.log('Parsed userRaw:', userRaw);
-
-          if (!userRaw) {
-            console.log('User data is missing in initData');
-            throw new Error('User data is missing in initData');
-          }
-
-          const telegramUser = JSON.parse(userRaw);
-          console.log('Parsed telegramUser:', telegramUser);
-
-          if (!telegramUser) {
-            console.log('Parsed user data is missing');
-            throw new Error('Parsed user data is missing');
-          }
-
-          // Extract Telegram ID
-          const telegramId = telegramUser.id;
-          if (!telegramId) {
-            console.log('Missing Telegram ID');
-            throw new Error('Telegram user ID is missing');
-          }
-
-          console.log(`User ID: ${telegramId}, Name: ${telegramUser.first_name}`);
+          const telegramUser = verifyTelegramData(initData);
 
           // Connect to the database
           await connectToDatabase();
-          let user = await User.findOne({ telegramId });
+          const user = await findOrCreateUser(telegramUser);
 
-          // Create a new user if one does not exist
-          if (!user) {
-            console.log('User not found, creating new user...');
-            user = new User({
-              telegramId,
-              firstName: telegramUser.first_name || '',
-              lastName: telegramUser.last_name || '',
-              username: telegramUser.username || '',
-            });
-            await user.save();
-          } else {
-            console.log('User found in the database');
-          }
-
-          // Return the user object for NextAuth
           return {
             id: user._id.toString(),
             telegramId: user.telegramId,
@@ -74,15 +41,14 @@ export default NextAuth({
             username: user.username,
           };
         } catch (error) {
-          console.log('Authorization failed:', error);
-          return null; // Return null to indicate failed login
+          console.error('Authorization failed:', error);
+          throw new Error('Authentication failed');
         }
       },
     }),
   ],
   callbacks: {
     async session({ session, token }) {
-      // Add additional fields to session.user object
       if (token) {
         session.user = {
           ...session.user,
@@ -96,7 +62,6 @@ export default NextAuth({
       return session;
     },
     async jwt({ token, user }) {
-      // Persist user data in the JWT token
       if (user) {
         token.id = user.id;
         token.telegramId = user.telegramId;
@@ -108,7 +73,59 @@ export default NextAuth({
     },
   },
   pages: {
-    signIn: '/authpage', // Redirect to your custom auth page
-    error: '/auth/error', // Custom error page
+    signIn: '/authpage',
+    error: '/auth/error',
   },
 });
+
+// Helper function to verify Telegram data
+function verifyTelegramData(initData: string): TelegramUser {
+  const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+  if (!BOT_TOKEN) {
+    throw new Error('Telegram Bot Token is not defined');
+  }
+
+  const initDataParams = new URLSearchParams(initData);
+  const hash = initDataParams.get('hash');
+  initDataParams.delete('hash');
+
+  const dataCheckString = Array.from(initDataParams.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([key, value]) => `${key}=${value}`)
+    .join('\n');
+
+  const secretKey = crypto.createHash('sha256').update(BOT_TOKEN).digest();
+  const computedHash = crypto
+    .createHmac('sha256', secretKey)
+    .update(dataCheckString)
+    .digest('hex');
+
+  if (computedHash !== hash) {
+    throw new Error('Invalid Telegram init data');
+  }
+
+  const userRaw = initDataParams.get('user');
+  if (!userRaw) {
+    throw new Error('User data is missing in initData');
+  }
+
+  const telegramUser: TelegramUser = JSON.parse(userRaw);
+  return telegramUser;
+}
+
+// Helper function for database operations
+async function findOrCreateUser(telegramUser: TelegramUser) {
+  const telegramId = telegramUser.id;
+  let user = await User.findOne({ telegramId });
+
+  if (!user) {
+    user = new User({
+      telegramId,
+      firstName: telegramUser.first_name || '',
+      lastName: telegramUser.last_name || '',
+      username: telegramUser.username || '',
+    });
+    await user.save();
+  }
+  return user;
+}

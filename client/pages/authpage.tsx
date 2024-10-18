@@ -14,7 +14,6 @@ const AuthPage = () => {
           let initDataRaw = window.Telegram.WebApp.initData;
 
           if (!initDataRaw) {
-            // Simulate Telegram data for testing in Chrome
             console.log('Simulating Telegram data for development');
             initDataRaw = 'user={"id":123456,"first_name":"John","username":"johndoe"}';
           }
