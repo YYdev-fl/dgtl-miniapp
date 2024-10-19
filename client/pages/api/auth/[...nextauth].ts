@@ -86,16 +86,18 @@ function verifyTelegramData(initData: string): TelegramUser {
   }
 
   const initDataParams = new URLSearchParams(initData);
-  const hash = initDataParams.get('hash');
-  initDataParams.delete('hash');
 
-  console.log(initDataParams)
-  console.log(hash)
+    const hash = initDataParams.get('hash');
+    if (!hash) {
+      throw new Error('Hash parameter is missing in initData');
+    }
+    initDataParams.delete('hash');
 
-  const dataCheckString = Array.from(initDataParams.entries())
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([key, value]) => `${key}=${value}`)
-    .join('\n');
+    // Construct data check string
+    const dataCheckString = Array.from(initDataParams.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([key, value]) => `${key}=${value}`)
+      .join('\n');
 
   console.log(dataCheckString)
 
