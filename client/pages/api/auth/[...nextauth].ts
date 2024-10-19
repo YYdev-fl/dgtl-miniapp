@@ -87,11 +87,13 @@ function verifyTelegramData(initData: string): TelegramUser {
 
   const initDataParams = new URLSearchParams(initData);
 
-    const hash = initDataParams.get('hash');
-    if (!hash) {
-      throw new Error('Hash parameter is missing in initData');
-    }
-    initDataParams.delete('hash');
+  console.log(initDataParams)
+
+  const hash = initDataParams.get('hash');
+  if (!hash) {
+    throw new Error('Hash parameter is missing in initData');
+  }
+  initDataParams.delete('hash');
 
     // Construct data check string
     const dataCheckString = Array.from(initDataParams.entries())
