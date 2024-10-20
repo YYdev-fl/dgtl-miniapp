@@ -87,7 +87,7 @@ function verifyTelegramData(initData: string): TelegramUser {
 
   const initDataParams = new URLSearchParams(initData);
 
-  console.log(initDataParams)
+  console.log('initDataParams:', initDataParams);
 
   const hash = initDataParams.get('hash');
   if (!hash) {
@@ -95,23 +95,31 @@ function verifyTelegramData(initData: string): TelegramUser {
   }
   initDataParams.delete('hash');
 
-    // Construct data check string
-    const dataCheckString = Array.from(initDataParams.entries())
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([key, value]) => `${key}=${value}`)
-      .join('\n');
+  // Construct data check string
+  const dataCheckString = Array.from(initDataParams.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([key, value]) => `${key}=${value}`)
+    .join('\n');
 
-  console.log(dataCheckString)
+  console.log('dataCheckString:', dataCheckString);
 
-  const secretKey = crypto.createHash('sha256').update(BOT_TOKEN).digest();
+  // Calculate the secret key using the same logic as your previous code
+  const secretKey = crypto
+    .createHmac('sha256', 'WebAppData')
+    .update(BOT_TOKEN)
+    .digest();
+
+  console.log('secretKey:', secretKey);
+
+  // Compute HMAC for the verification string using the secret key
   const computedHash = crypto
     .createHmac('sha256', secretKey)
     .update(dataCheckString)
     .digest('hex');
 
-    console.log(secretKey)
-    console.log(computedHash)
-    console.log(hash)
+  console.log('computedHash:', computedHash);
+  console.log('provided hash:', hash);
+
   if (computedHash !== hash) {
     throw new Error('Invalid Telegram init data');
   }
