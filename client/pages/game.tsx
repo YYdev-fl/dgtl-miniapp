@@ -36,11 +36,12 @@ const Game: React.FC = () => {
   const mineralIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastTimeRef = useRef<number>(0);
   const router = useRouter();
+
+  // Calculate total collected minerals value
   const totalCollectedValue: number = Object.values(collectedMinerals).reduce(
     (acc, mineral) => acc + mineral.count * mineral.value,
     0
   );
-
 
   useEffect(() => {
     // Check if Telegram API is available
@@ -209,11 +210,13 @@ const Game: React.FC = () => {
           headers: {
             'Content-Type': 'application/json',
           },
+          credentials: 'include', // Ensure cookies are sent
           body: JSON.stringify({ totalCollectedValue }),
         });
 
         const data = await res.json();
         if (!res.ok) {
+          console.error('API Error:', data);
           throw new Error(data.error || 'Failed to update coins');
         }
 
@@ -223,6 +226,9 @@ const Game: React.FC = () => {
         console.error('Error updating coins:', error);
         alert('An error occurred while updating coins.');
       }
+    } else {
+      console.error('No session found');
+      alert('You are not logged in.');
     }
 
     router.push('/');
@@ -241,7 +247,6 @@ const Game: React.FC = () => {
       </div>
     );
   }
-
 
   return (
     <div className="card bg-neutral text-white overflow-hidden fixed inset-0 w-full h-full select-none touch-none">
@@ -274,39 +279,38 @@ const Game: React.FC = () => {
         {/* Render Minerals */}
         {minerals.map((mineral) => (
           <div
-          key={mineral.id}
-          id={`mineral-${mineral.id}`}
-          onPointerDown={() =>
-            handleMineralClick(mineral.id, mineral.value, mineral.image)
-          }
-          style={{
-            position: "absolute",
-            left: mineral.x - 20,
-            top: mineral.y - 5,
-            width: mineral.radius * 2 + 15,
-            height: mineral.radius * 2 + 15,
-            cursor: "pointer",
-            transform: `rotate(${mineral.rotation}deg)`,
-            transition: "transform 0.1s",
-            pointerEvents: "auto",
-            touchAction: "manipulation",
-          }}
-        >
-          <img
-            src={mineral.image}
-            alt=""
-            className="w-full h-full object-contain"
-          />
-        </div>
-        
+            key={mineral.id}
+            id={`mineral-${mineral.id}`}
+            onPointerDown={() =>
+              handleMineralClick(mineral.id, mineral.value, mineral.image)
+            }
+            style={{
+              position: "absolute",
+              left: mineral.x - 20,
+              top: mineral.y - 5,
+              width: mineral.radius * 2 + 15,
+              height: mineral.radius * 2 + 15,
+              cursor: "pointer",
+              transform: `rotate(${mineral.rotation}deg)`,
+              transition: "transform 0.1s",
+              pointerEvents: "auto",
+              touchAction: "manipulation",
+            }}
+          >
+            <img
+              src={mineral.image}
+              alt=""
+              className="w-full h-full object-contain"
+            />
+          </div>
         ))}
       </div>
 
       {/* Game Over Modal */}
       {isGameOver && (
-        <div className="absolute inset-0 bg-black  flex flex-col items-center justify-center z-30 p-6">
-          <h2 className="text-2xl  font-bold">Insane!</h2>
-          <h2 className="text-2xl mb-5 font-bold">How you got so much?  </h2>
+        <div className="absolute inset-0 bg-black flex flex-col items-center justify-center z-30 p-6">
+          <h2 className="text-2xl font-bold">Insane!</h2>
+          <h2 className="text-2xl mb-5 font-bold">How did you get so much?</h2>
           <h1 className="text-4xl font-bold mb-4">{totalCollectedValue} GTL</h1>
           <p className="mb-4">Earned</p>
 
@@ -323,8 +327,10 @@ const Game: React.FC = () => {
             ))}
           </div>
 
-
-          <button className="btn btn-base-100 border-2 border-accent shadow-glow  text-lg" onClick={handleGameEnd}>
+          <button
+            className="btn btn-base-100 border-2 border-accent shadow-glow text-lg"
+            onClick={handleGameEnd}
+          >
             Go to Main Menu
           </button>
         </div>
