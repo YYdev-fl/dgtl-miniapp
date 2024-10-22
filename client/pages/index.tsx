@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 
 const Index = () => {
   const { data: session, status } = useSession();
-  const [userData, setUserData] = useState({ coins: 0, tickets: 0, level: 1 });
+  const [userData, setUserData] = useState({ coins: 0, tickets: 0});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -62,7 +62,7 @@ const Index = () => {
           </div>
           <div className="stat">
             <div className="stat-title">LVL</div>
-            <div className="stat-value text-white text-5xl">{userData.level}</div>
+            <div className="stat-value text-white text-5xl">1</div>
           </div>
         </div>
 
@@ -92,7 +92,7 @@ const Index = () => {
               <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black to-transparent flex items-center justify-between">
                 <div>
                   <h2 className="text-lg font-bold text-white">Level 1</h2>
-                  <p className="text-m font-bold">10 ⛏</p>
+                  <p className="text-m font-bold">{userData.tickets} ⛏</p>
                 </div>
                 <Link href="/game">
                   <button className="btn btn-md border-2 border-accent shadow-glow">Play</button>

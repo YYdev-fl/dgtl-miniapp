@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/router";
+import { useSession } from 'next-auth/react';
 
 // Define mineral interface
 interface Mineral {
@@ -23,6 +24,7 @@ const mineralsData = [
 ];
 
 const Game: React.FC = () => {
+  const { data: session } = useSession();
   const [minerals, setMinerals] = useState<Mineral[]>([]);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(10);
@@ -34,6 +36,11 @@ const Game: React.FC = () => {
   const mineralIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastTimeRef = useRef<number>(0);
   const router = useRouter();
+  const totalCollectedValue: number = Object.values(collectedMinerals).reduce(
+    (acc, mineral) => acc + mineral.count * mineral.value,
+    0
+  );
+
 
   useEffect(() => {
     // Check if Telegram API is available
@@ -194,8 +201,31 @@ const Game: React.FC = () => {
   }, []);
 
   // Handle the end of the game and navigate back to the index
-  const handleGameEnd = () => {
-    router.push("/");
+  const handleGameEnd = async () => {
+    if (session) {
+      try {
+        const res = await fetch('/api/updateCoins', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ totalCollectedValue }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Failed to update coins');
+        }
+
+        alert(`Game Over! You've earned ${totalCollectedValue} GTL.`);
+        console.log(`New coin balance: ${data.coins}`);
+      } catch (error) {
+        console.error('Error updating coins:', error);
+        alert('An error occurred while updating coins.');
+      }
+    }
+
+    router.push('/');
   };
 
   // Load assets when the component mounts
@@ -212,11 +242,6 @@ const Game: React.FC = () => {
     );
   }
 
-  // Calculate total collected minerals value
-  const totalCollectedValue = Object.values(collectedMinerals).reduce(
-    (acc, mineral) => acc + mineral.count * mineral.value,
-    0
-  );
 
   return (
     <div className="card bg-neutral text-white overflow-hidden fixed inset-0 w-full h-full select-none touch-none">
