@@ -1,7 +1,26 @@
-import mongoose, { Document, models, Schema } from 'mongoose';
+import mongoose, { Document, Model, Schema, Types } from 'mongoose';
+
+// Define an interface representing a document in MongoDB
+export interface IUser extends Document {
+  _id: Types.ObjectId;
+  telegramId: string;
+  firstName: string;
+  lastName?: string;
+  username?: string;
+  coins: number;
+  tickets: number;
+  boosts: {
+    boost1: number;
+    boost2: number;
+    boost3: number;
+    boost4: number;
+  };
+  createdAt: Date;
+}
+
 
 // Define the Mongoose schema for the User model
-const UserSchema = new Schema({
+const UserSchema: Schema<IUser> = new Schema<IUser>({
   telegramId: {
     type: String,
     required: true,
@@ -11,11 +30,21 @@ const UserSchema = new Schema({
     type: String,
     required: true,
   },
-  lastName: {
-    type: String,
+  lastName: String,
+  username: String,
+  coins: {
+    type: Number,
+    default: 0,
   },
-  username: {
-    type: String,
+  tickets: {
+    type: Number,
+    default: 0,
+  },
+  boosts: {
+    boost1: { type: Number, default: 0 },
+    boost2: { type: Number, default: 0 },
+    boost3: { type: Number, default: 0 },
+    boost4: { type: Number, default: 0 },
   },
   createdAt: {
     type: Date,
@@ -23,6 +52,7 @@ const UserSchema = new Schema({
   },
 });
 
+
 // Export the User model if it's not already created
-const UserModel = models.User || mongoose.model("User", UserSchema);
+const UserModel: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
 export default UserModel;

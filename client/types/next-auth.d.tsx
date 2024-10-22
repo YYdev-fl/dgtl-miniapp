@@ -9,7 +9,7 @@ declare module 'next-auth' {
       firstName: string;
       lastName: string;
       username: string;
-    } & DefaultSession['user'];
+    };
   }
 
   interface User {

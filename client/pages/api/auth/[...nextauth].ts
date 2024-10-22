@@ -5,12 +5,11 @@ import User from '../../../models/User';
 import crypto from 'crypto';
 
 interface TelegramUser {
-  id: number;
+  id: string;
+  telegramId: string;
   first_name: string;
   last_name?: string;
   username?: string;
-  photo_url?: string;
-  language_code?: string;
 }
 
 export default NextAuth({
@@ -37,8 +36,8 @@ export default NextAuth({
             id: user._id.toString(),
             telegramId: user.telegramId,
             firstName: user.firstName,
-            lastName: user.lastName,
-            username: user.username,
+            lastName: user.lastName || "",
+            username: user.username || "",
           };
         } catch (error) {
           console.error('Authorization failed:', error);
@@ -52,11 +51,11 @@ export default NextAuth({
       if (token) {
         session.user = {
           ...session.user,
-          id: token.id,
-          telegramId: token.telegramId,
-          firstName: token.firstName,
-          lastName: token.lastName,
-          username: token.username,
+          id: token.id as string,
+          telegramId: token.telegramId as string,
+          firstName: token.firstName as string,
+          lastName: token.lastName as string,
+          username: token.username as string,
         };
       }
       return session;
@@ -87,8 +86,6 @@ function verifyTelegramData(initData: string): TelegramUser {
 
   const initDataParams = new URLSearchParams(initData);
 
-  console.log('initDataParams:', initDataParams);
-
   const hash = initDataParams.get('hash');
   if (!hash) {
     throw new Error('Hash parameter is missing in initData');
@@ -101,24 +98,17 @@ function verifyTelegramData(initData: string): TelegramUser {
     .map(([key, value]) => `${key}=${value}`)
     .join('\n');
 
-  console.log('dataCheckString:', dataCheckString);
-
   // Calculate the secret key using the same logic as your previous code
   const secretKey = crypto
     .createHmac('sha256', 'WebAppData')
     .update(BOT_TOKEN)
     .digest();
 
-  console.log('secretKey:', secretKey);
-
   // Compute HMAC for the verification string using the secret key
   const computedHash = crypto
     .createHmac('sha256', secretKey)
     .update(dataCheckString)
     .digest('hex');
-
-  console.log('computedHash:', computedHash);
-  console.log('provided hash:', hash);
 
   if (computedHash !== hash) {
     throw new Error('Invalid Telegram init data');

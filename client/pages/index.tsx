@@ -1,11 +1,35 @@
 import { useSession } from 'next-auth/react';
 import Layout from '../components/layout';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 
 const Index = () => {
   const { data: session, status } = useSession();
+  const [userData, setUserData] = useState({ coins: 0, tickets: 0, level: 1 });
+  const [loading, setLoading] = useState(true);
 
-  if (status === 'loading') {
+  useEffect(() => {
+    // Fetch user data from API
+    const fetchUserData = async () => {
+      if (session) {
+        try {
+          const res = await fetch('/api/userData');
+          if (!res.ok) throw new Error('Failed to fetch user data');
+          
+          const data = await res.json();
+          setUserData(data);
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [session]);
+
+  if (status === 'loading' || loading) {
     return (
       <div className="flex items-center justify-center h-screen w-screen bg-base-100">
         <div className="loading loading-spinner loading-lg mb-4"></div>
@@ -34,11 +58,11 @@ const Index = () => {
         <div className="stats bg-neutral text-primary-content">
           <div className="stat">
             <div className="stat-title">Account balance</div>
-            <div className="stat-value text-white text-3xl">5,400 GTL</div>
+            <div className="stat-value text-white text-3xl">{userData.coins} GTL</div>
           </div>
           <div className="stat">
             <div className="stat-title">LVL</div>
-            <div className="stat-value text-white text-5xl">1</div>
+            <div className="stat-value text-white text-5xl">{userData.level}</div>
           </div>
         </div>
 
