@@ -13,7 +13,7 @@ const Index = () => {
     const fetchUserData = async () => {
       if (session) {
         try {
-          const res = await fetch('/api/userData');
+          const res = await fetch('/api/user/data');
           if (!res.ok) throw new Error('Failed to fetch user data');
           
           const data = await res.json();
