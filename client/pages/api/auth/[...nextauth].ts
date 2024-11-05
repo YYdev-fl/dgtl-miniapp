@@ -3,6 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { connectToDatabase } from '../../../lib/mongodb';
 import User from '../../../models/User';
 import crypto from 'crypto';
+import { init } from 'next/dist/compiled/webpack/webpack';
 
 interface TelegramUser {
   id: string;
@@ -22,6 +23,7 @@ export default NextAuth({
       async authorize(credentials) {
         try {
           const initData = credentials?.initData;
+          console.log(initData);
           if (!initData) {
             throw new Error('Missing Telegram Init Data');
           }
