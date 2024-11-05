@@ -13,11 +13,6 @@ const AuthPage = () => {
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
           let initDataRaw = window.Telegram.WebApp.initData;
 
-          if (!initDataRaw) {
-            console.log('Simulating Telegram data for development');
-            initDataRaw = 'user={"id":123456,"first_name":"John","username":"johndoe"}';
-          }
-
           if (initDataRaw) {
             console.log('Signing in with initDataRaw:', initDataRaw);
             signIn('credentials', { initData: initDataRaw });

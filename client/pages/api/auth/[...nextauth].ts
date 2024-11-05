@@ -27,7 +27,7 @@ export default NextAuth({
           }
 
           const telegramUser = verifyTelegramData(initData);
-
+          
           // Connect to the database
           await connectToDatabase();
           const user = await findOrCreateUser(telegramUser);

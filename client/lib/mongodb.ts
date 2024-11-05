@@ -22,13 +22,19 @@ global.mongooseCache = global.mongooseCache || { conn: null, promise: null };
 
 export async function connectToDatabase(): Promise<mongoose.Connection> {
   if (global.mongooseCache.conn) {
+    console.log('Using cached database connection');
     return global.mongooseCache.conn;
   }
 
   if (!global.mongooseCache.promise) {
-    global.mongooseCache.promise = mongoose.connect(MONGODB_URI).then((mongoose) => mongoose.connection);
+    console.log('Creating new database connection promise');
+    global.mongooseCache.promise = mongoose.connect(MONGODB_URI).then((mongoose) => {
+      console.log('Connected to MongoDB');
+      return mongoose.connection;
+    });
   }
 
   global.mongooseCache.conn = await global.mongooseCache.promise;
   return global.mongooseCache.conn;
 }
+
