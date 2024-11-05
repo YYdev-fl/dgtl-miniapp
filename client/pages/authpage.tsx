@@ -28,7 +28,7 @@ const AuthPage = () => {
     };
 
     authenticate();
-  }, [status, router]);
+  }, [status]);
 
   if (error) {
     return (
