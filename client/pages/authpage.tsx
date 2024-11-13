@@ -7,18 +7,28 @@ const AuthPage = () => {
   const { status } = useSession();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  console.log('works');
+
   useEffect(() => {
     const authenticate = async () => {
-      console.log('status: ', status);
+      console.log('Authentication status:', status);
       if (status === 'unauthenticated') {
-        console.log('unauthenticated');
+        console.log('Unauthenticated user.');
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-          let initDataRaw = window.Telegram.WebApp.initData;
-          console.log('initDAta exists');
+          const initDataRaw = window.Telegram.WebApp.initData;
           if (initDataRaw) {
-            console.log('Signing in with initDataRaw:', initDataRaw);
-            signIn('credentials', { initData: initDataRaw });
+            try {
+              console.log('Attempting signIn with initDataRaw:', initDataRaw);
+              const result = await signIn('credentials', { initData: initDataRaw, redirect: false });
+              if (result?.error) {
+                console.error('SignIn error:', result.error);
+                setError(result.error);
+              } else {
+                console.log('SignIn successful:', result);
+              }
+            } catch (err) {
+              console.error('SignIn failed:', err);
+              setError('SignIn failed. Please try again.');
+            }
           } else {
             window.location.href = '/auth/error1';
           }
@@ -30,7 +40,9 @@ const AuthPage = () => {
       }
     };
 
-    authenticate();
+    if (status === 'unauthenticated' || status === 'authenticated') {
+      authenticate();
+    }
   }, [status]);
 
   if (error) {
@@ -41,10 +53,9 @@ const AuthPage = () => {
     );
   }
 
-  if (status === 'loading' || status === 'unauthenticated') {
-    return <div className="flex items-center justify-center h-screen w-screen bg-base-100">
-      <div className="loading loading-spinner loading-lg mb-4"></div>
-    </div>;
+  if (status === 'loading') {
+    return <div>Loading...</div>
+  
   } 
 
   return (
