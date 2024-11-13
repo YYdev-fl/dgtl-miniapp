@@ -9,25 +9,26 @@ const Index = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch user data from API
     const fetchUserData = async () => {
-      if (session) {
-        try {
-          const res = await fetch('/api/user/data');
-          if (!res.ok) throw new Error('Failed to fetch user data');
-          
-          const data = await res.json();
-          setUserData(data);
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-        } finally {
-          setLoading(false);
-        }
+      try {
+        const res = await fetch('/api/user/data');
+        if (!res.ok) throw new Error('Failed to fetch user data');
+        const data = await res.json();
+        setUserData(data);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setLoading(false); // Ensure loading is stopped after the fetch
       }
     };
 
-    fetchUserData();
-  }, [session]);
+    // Only fetch data if the user is authenticated
+    if (status === 'authenticated') {
+      fetchUserData();
+    } else if (status === 'unauthenticated') {
+      setLoading(false); // Stop loading if unauthenticated
+    }
+  }, [status]);
 
   if (status === 'loading' || loading) {
     return (
