@@ -10,9 +10,10 @@ const AuthPage = () => {
   useEffect(() => {
     const authenticate = async () => {
       if (status === 'unauthenticated') {
+        console.log('unauthenticated');
         if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
           let initDataRaw = window.Telegram.WebApp.initData;
-
+          console.log('initDAta exists');
           if (initDataRaw) {
             console.log('Signing in with initDataRaw:', initDataRaw);
             signIn('credentials', { initData: initDataRaw });
