@@ -212,41 +212,39 @@ const Game: React.FC = () => {
     if (timeLeft === 0 && !isGameOver && !isEndHandled) {
       setIsGameOver(true);
       setIsEndHandled(true); // Prevent multiple executions
-      handleGameEnd();
+
     }
   }, [timeLeft, isGameOver, isEndHandled]);
 
 
-  // Handle the end of the game and navigate back to the index
-  const handleGameEnd = async () => {
-    if (session) {
-      try {
-        const res = await fetch('/api/updateCoins', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include', // Ensure cookies are sent
-          body: JSON.stringify({ totalCollectedValue }),
-        });
+  useEffect(() => {
+    if (isGameOver) {
+      // Send totalCollectedValue to the API endpoint
+      const updateCoins = async () => {
+        try {
+          const response = await fetch('/api/updateCoins', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ amount: totalCollectedValue }),
+          });
 
-        const data = await res.json();
-        if (!res.ok) {
-          console.error('API Error:', data);
-          throw new Error(data.error || 'Failed to update coins');
+          if (!response.ok) {
+            throw new Error('Failed to update coins');
+          }
+
+          const data = await response.json();
+          console.log('Coins updated:', data.coins);
+        } catch (error) {
+          console.error('Error updating coins:', error);
         }
+      };
 
-        alert(`Game Over! You've earned ${totalCollectedValue} GTL.`);
-        console.log(`New coin balance: ${data.coins}`);
-      } catch (error) {
-        console.error('Error updating coins:', error);
-        alert('An error occurred while updating coins.');
-      }
-    } else {
-      console.error('No session found');
-      alert('You are not logged in.');
+      updateCoins();
     }
-  };
+  }, [isGameOver, totalCollectedValue]);
+
 
   // Load assets when the component mounts
   useEffect(() => {
