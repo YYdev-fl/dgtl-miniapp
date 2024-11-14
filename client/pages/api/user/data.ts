@@ -1,6 +1,7 @@
 import { getSession } from 'next-auth/react';
 import UserModel from '../../../models/User';
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { connectToDatabase } from '@/lib/mongodb';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   console.log('Request Headers:', req.headers);
@@ -14,6 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // Find user by telegramId stored in the session
+    await connectToDatabase()
     const userData = await UserModel.findOne({ telegramId: session.user.telegramId }).lean();
     console.log("user was found: ", userData)
     if (!userData) {
