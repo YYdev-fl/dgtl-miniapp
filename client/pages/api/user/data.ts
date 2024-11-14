@@ -20,10 +20,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Destructure necessary fields from the user data
-    const { coins, tickets, boosts } = userData;
+    const { coins, tickets} = userData;
 
     // Return user data in response
-    return res.status(200).json({ coins, tickets, boosts });
+    return res.status(200).json({ coins, tickets});
   } catch (error) {
     console.error('Error fetching user data:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
