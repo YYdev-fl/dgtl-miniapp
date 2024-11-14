@@ -24,7 +24,7 @@ const mineralsData = [
 ];
 
 const Game: React.FC = () => {
-  const { data: session } = useSession();
+  const { data: session} = useSession();
   const [minerals, setMinerals] = useState<Mineral[]>([]);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(10);
@@ -37,6 +37,7 @@ const Game: React.FC = () => {
   const lastTimeRef = useRef<number>(0);
   const router = useRouter();
 
+  console.log(session);
   // Calculate total collected minerals value
   const totalCollectedValue: number = Object.values(collectedMinerals).reduce(
     (acc, mineral) => acc + mineral.count * mineral.value,
