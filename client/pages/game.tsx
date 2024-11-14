@@ -201,6 +201,21 @@ const Game: React.FC = () => {
     }));
   }, []);
 
+  const goToMainMenu = async () => {
+    router.push('/');
+  }
+
+  const [isEndHandled, setIsEndHandled] = useState(false);
+
+  useEffect(() => {
+    if (timeLeft === 0 && !isGameOver && !isEndHandled) {
+      setIsGameOver(true);
+      setIsEndHandled(true); // Prevent multiple executions
+      handleGameEnd();
+    }
+  }, [timeLeft, isGameOver, isEndHandled]);
+
+
   // Handle the end of the game and navigate back to the index
   const handleGameEnd = async () => {
     if (session) {
@@ -230,8 +245,6 @@ const Game: React.FC = () => {
       console.error('No session found');
       alert('You are not logged in.');
     }
-
-    router.push('/');
   };
 
   // Load assets when the component mounts
@@ -329,7 +342,7 @@ const Game: React.FC = () => {
 
           <button
             className="btn btn-base-100 border-2 border-accent shadow-glow text-lg"
-            onClick={handleGameEnd}
+            onClick={goToMainMenu}
           >
             Go to Main Menu
           </button>
