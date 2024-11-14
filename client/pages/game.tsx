@@ -37,7 +37,7 @@ const Game: React.FC = () => {
   const lastTimeRef = useRef<number>(0);
   const router = useRouter();
 
-  console.log(session);
+  console.log(session)
   // Calculate total collected minerals value
   const totalCollectedValue: number = Object.values(collectedMinerals).reduce(
     (acc, mineral) => acc + mineral.count * mineral.value,

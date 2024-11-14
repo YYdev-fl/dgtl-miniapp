@@ -1,6 +1,6 @@
 import React from "react";
 import Layout from "../components/layout";
-
+import { useSession } from "next-auth/react";
 // Define the type for each card's data
 interface CardData {
   title: string;
@@ -113,6 +113,38 @@ const minerals: MineralData[] = [
 ];
 
 const Index: React.FC = () => {
+  const { data: session, status } = useSession();
+
+
+  const handleGameEnd = async () => {
+    if (session) {
+      try {
+        const res = await fetch('/api/updateCoins', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include', // Ensure cookies are sent
+          body: JSON.stringify(100),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          console.error('API Error:', data);
+          throw new Error(data.error || 'Failed to update coins');
+        }
+
+        alert(`Game Over! You've earned 100 GTL.`);
+        console.log(`New coin balance: ${data.coins}`);
+      } catch (error) {
+        console.error('Error updating coins:', error);
+        alert('An error occurred while updating coins.');
+      }
+    } else {
+      console.error('No session found');
+      alert('You are not logged in.');
+    }
+  };
   return (
     <Layout>
       <div className="flex flex-col min-h-screen pb-20">
@@ -160,7 +192,8 @@ const Index: React.FC = () => {
                   </div>
 
                   {/* Buy Button */}
-                  <button className="btn btn-base-100 ml-4 rounded-xl border-2  ">Buy</button>
+                  <button className="btn btn-base-100 ml-4 rounded-xl border-2  "
+                  onClick={handleGameEnd}>Buy</button>
                 </div>
               ))}
             </div>
