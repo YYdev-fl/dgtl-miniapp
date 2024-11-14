@@ -3,6 +3,7 @@ import UserModel from '../../../models/User';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  console.log('Request Headers:', req.headers);
   const session = await getSession({ req });
 
   // Check if the session exists (i.e., user is authenticated)
