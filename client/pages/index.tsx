@@ -8,36 +8,6 @@ const Index = () => {
   const [userData, setUserData] = useState({ coins: 0, tickets: 0});
   const [loading, setLoading] = useState(true);
 
-  const handleGameEnd = async () => {
-    if (session) {
-      try {
-        const res = await fetch('/api/updateCoins', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include', // Ensure cookies are sent
-          body: JSON.stringify(100),
-        });
-
-        const data = await res.json();
-        if (!res.ok) {
-          console.error('API Error:', data);
-          throw new Error(data.error || 'Failed to update coins');
-        }
-
-        alert(`Game Over! You've earned 100 GTL.`);
-        console.log(`New coin balance: ${data.coins}`);
-      } catch (error) {
-        console.error('Error updating coins:', error);
-        alert('An error occurred while updating coins.');
-      }
-    } else {
-      console.error('No session found');
-      alert('You are not logged in.');
-    }
-  };
-
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -125,9 +95,9 @@ const Index = () => {
                   <h2 className="text-lg font-bold text-white">Level 1</h2>
                   <p className="text-m font-bold">{userData.tickets} ⛏</p>
                 </div>
-                
-                  <button className="btn btn-md border-2 border-accent shadow-glow" onClick={handleGameEnd}>Play</button>
-                
+                <Link href={"/game"}>
+                  <button className="btn btn-md border-2 border-accent shadow-glow">Play</button>
+                </Link>
               </div>
             </div>
           </div>
