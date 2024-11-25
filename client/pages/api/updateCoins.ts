@@ -1,15 +1,18 @@
-import { getSession } from 'next-auth/react';
+import { getServerSession } from 'next-auth';
 import UserModel from '../../models/User';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { connectToDatabase } from '@/lib/mongodb';
+import authOptions from '@/pages/api/auth/[...nextauth]';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   console.log('Request Headers:', req.headers);
-  const session = await getSession({ req });
+
+  // Use getServerSession to retrieve session on the server-side
+  const session = await getServerSession(req, res, authOptions) as { user?: { telegramId?: string } };
   console.log('Request session:', session);
 
   // Check if the session exists (i.e., user is authenticated)
-  if (!session || !session.user || !session.user.telegramId) {
+  if (!session?.user?.telegramId) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
@@ -40,7 +43,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: 'User not found' });
     }
 
-    return res.status(200).json({ message: 'Coins updated', coins: updatedUser.coins });
+    return res.status(200).json({ message: 'Coins updated successfully', coins: updatedUser.coins });
   } catch (error) {
     console.error('Error updating coins:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
