@@ -209,17 +209,10 @@ const Game: React.FC = () => {
   const [isEndHandled, setIsEndHandled] = useState(false);
 
   useEffect(() => {
-    if (timeLeft === 0 && !isGameOver && !isEndHandled) {
-      setIsGameOver(true);
+    if (isGameOver && !isEndHandled) {
       setIsEndHandled(true); // Prevent multiple executions
 
-    }
-  }, [timeLeft, isGameOver, isEndHandled]);
-
-
-  useEffect(() => {
-    if (isGameOver) {
-      // Send totalCollectedValue to the API endpoint
+      // Function to update coins
       const updateCoins = async () => {
         try {
           const response = await fetch('/api/updateCoins', {
@@ -227,16 +220,15 @@ const Game: React.FC = () => {
             headers: {
               'Content-Type': 'application/json',
             },
-            credentials: 'include',
             body: JSON.stringify({ amount: totalCollectedValue }),
           });
 
-          if (!response.ok) {
-            throw new Error('Failed to update coins');
-          }
-
           const data = await response.json();
-          console.log('Coins updated:', data.coins);
+          if (!response.ok) {
+            console.error('Error updating coins:', data.error || data.message);
+          } else {
+            console.log('Coins updated:', data.coins);
+          }
         } catch (error) {
           console.error('Error updating coins:', error);
         }
@@ -244,7 +236,8 @@ const Game: React.FC = () => {
 
       updateCoins();
     }
-  }, [isGameOver, totalCollectedValue]);
+  }, [isGameOver, isEndHandled, totalCollectedValue]);
+
 
 
   // Load assets when the component mounts
