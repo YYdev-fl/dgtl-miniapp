@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth';
 import UserModel from '../../models/User';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { connectToDatabase } from '@/lib/mongodb';
-import authOptions from '@/pages/api/auth/[...nextauth]';
+import {authOptions} from '@/pages/api/auth/[...nextauth]';
 import { Session } from 'next-auth';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

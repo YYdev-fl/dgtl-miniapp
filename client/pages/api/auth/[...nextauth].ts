@@ -3,7 +3,6 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { connectToDatabase } from '../../../lib/mongodb';
 import User from '../../../models/User';
 import crypto from 'crypto';
-import { init } from 'next/dist/compiled/webpack/webpack';
 
 interface TelegramUser {
   id: string;
@@ -13,7 +12,7 @@ interface TelegramUser {
   username?: string;
 }
 
-export default NextAuth({
+export const authOptions = {
   providers: [
     CredentialsProvider({
       name: 'Telegram',
@@ -29,7 +28,7 @@ export default NextAuth({
           }
 
           const telegramUser = verifyTelegramData(initData);
-          
+
           // Connect to the database
           await connectToDatabase();
           const user = await findOrCreateUser(telegramUser);
@@ -38,8 +37,8 @@ export default NextAuth({
             id: user._id.toString(),
             telegramId: user.telegramId,
             firstName: user.firstName,
-            lastName: user.lastName || "",
-            username: user.username || "",
+            lastName: user.lastName || '',
+            username: user.username || '',
           };
         } catch (error) {
           console.error('Authorization failed:', error);
@@ -50,15 +49,14 @@ export default NextAuth({
   ],
   callbacks: {
     async session({ session, token }) {
-      if (token) {
-        session.user = {
-          id: token.id as string,
-          telegramId: token.telegramId as string,
-          firstName: token.firstName as string,
-          lastName: token.lastName || '',
-          username: token.username || '',
-        };
-      }
+      // Now `token` has the extended type
+      session.user = {
+        id: token.id,
+        telegramId: token.telegramId,
+        firstName: token.firstName,
+        lastName: token.lastName || '',
+        username: token.username || '',
+      };
       return session;
     },
     async jwt({ token, user }) {
@@ -76,7 +74,10 @@ export default NextAuth({
     signIn: '/authpage',
     error: '/auth/error',
   },
-});
+  secret: process.env.NEXTAUTH_SECRET,
+};
+
+export default NextAuth(authOptions);
 
 // Helper function to verify Telegram data
 function verifyTelegramData(initData: string): TelegramUser {
