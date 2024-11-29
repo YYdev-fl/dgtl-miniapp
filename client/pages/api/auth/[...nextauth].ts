@@ -52,7 +52,6 @@ export default NextAuth({
     async session({ session, token }) {
       if (token) {
         session.user = {
-          ...session.user,
           id: token.id as string,
           telegramId: token.telegramId as string,
           firstName: token.firstName as string,
