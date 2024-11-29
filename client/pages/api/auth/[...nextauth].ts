@@ -67,8 +67,8 @@ export default NextAuth({
         token.id = user.id;
         token.telegramId = user.telegramId;
         token.firstName = user.firstName;
-        token.lastName = user.lastName;
-        token.username = user.username;
+        token.lastName = user.lastName || '';
+        token.username = user.username || '';
       }
       return token;
     },
