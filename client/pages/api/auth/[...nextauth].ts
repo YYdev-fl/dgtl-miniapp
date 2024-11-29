@@ -56,8 +56,8 @@ export default NextAuth({
           id: token.id as string,
           telegramId: token.telegramId as string,
           firstName: token.firstName as string,
-          lastName: token.lastName as string,
-          username: token.username as string,
+          lastName: token.lastName || '',
+          username: token.username || '',
         };
       }
       return session;
