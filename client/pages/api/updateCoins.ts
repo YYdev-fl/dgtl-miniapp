@@ -1,15 +1,13 @@
-import { getServerSession } from 'next-auth';
+import { getSession } from 'next-auth/react';
 import UserModel from '../../models/User';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { connectToDatabase } from '@/lib/mongodb';
-import {authOptions} from '@/pages/api/auth/[...nextauth]';
-import { Session } from 'next-auth';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   console.log('Request Headers:', req.headers);
 
   // Use getServerSession to retrieve session on the server-side
-  const session: Session | null = await getServerSession(req, res, authOptions);
+  const session = await getSession({req})
   console.log('Request session:', session);
 
   // Check if the session exists (i.e., user is authenticated)
@@ -50,3 +48,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+
+

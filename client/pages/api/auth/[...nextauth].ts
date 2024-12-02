@@ -3,6 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { connectToDatabase } from '../../../lib/mongodb';
 import User from '../../../models/User';
 import crypto from 'crypto';
+import type { NextAuthOptions } from 'next-auth';
 
 interface TelegramUser {
   id: string;
@@ -12,7 +13,7 @@ interface TelegramUser {
   username?: string;
 }
 
-export const authOptions = {
+const authOptions: NextAuthOptions  = {
   providers: [
     CredentialsProvider({
       name: 'Telegram',
@@ -141,3 +142,4 @@ async function findOrCreateUser(telegramUser: TelegramUser) {
   }
   return user;
 }
+

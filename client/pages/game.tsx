@@ -225,12 +225,12 @@ const Game: React.FC = () => {
 
           const data = await response.json();
           if (!response.ok) {
-            console.error('Error updating coins:', data.error || data.message);
+            console.error('Error updating coins1:', data.error || data.message);
           } else {
             console.log('Coins updated:', data.coins);
           }
         } catch (error) {
-          console.error('Error updating coins:', error);
+          console.error('Error updating coins2:', error);
         }
       };
 
