@@ -239,7 +239,6 @@ const Game: React.FC = () => {
   }, [isGameOver, isEndHandled, totalCollectedValue]);
 
 
-
   // Load assets when the component mounts
   useEffect(() => {
     preloadAssets();
