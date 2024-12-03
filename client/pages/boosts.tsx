@@ -1,6 +1,8 @@
-import React from "react";
 import Layout from "../components/layout";
+import React, { useState } from "react";
 import { useSession } from "next-auth/react";
+import axios from "axios";
+
 // Define the type for each card's data
 interface CardData {
   title: string;
@@ -20,7 +22,7 @@ const cards: CardData[] = [
     title: "Speed Boost",
     price: "100",
     imageUrl: "/boosts/boost.png", // Update with your image path
-    owned: 2,
+    owned: 0,
   },
   {
     title: "Dynamite",
@@ -38,7 +40,7 @@ const cards: CardData[] = [
     title: "Big foot",
     price: "100",
     imageUrl: "/path-to-image/protection-shield.png", // Update with your image path
-    owned: 4,
+    owned: 0,
   },
 
 ];
@@ -113,93 +115,87 @@ const minerals: MineralData[] = [
 ];
 
 const Index: React.FC = () => {
+  const { data: session } = useSession();
+  const [boosts, setBoosts] = useState(
+    cards.map((card) => ({ title: card.title, owned: card.owned }))
+  );
+  const [coins, setCoins] = useState<number | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const handleBuyBoost = async (boostType: string) => {
+    if (!session) {
+      alert("Please log in to buy boosts.");
+      return;
+    }
+
+    try {
+      const response = await axios.post("/api/buyboost", { boostType });
+      const { boosts: updatedBoosts, coins: updatedCoins } = response.data;
+
+      setBoosts((prevBoosts) =>
+        prevBoosts.map((boost) =>
+          boost.title === boostType
+            ? { ...boost, owned: updatedBoosts[boostType] }
+            : boost
+        )
+      );
+      setCoins(updatedCoins);
+      setMessage("Boost purchased successfully!");
+    } catch (error: any) {
+      if (error.response?.data?.message === "Not enough coins") {
+        setMessage("You don't have enough coins to buy this boost.");
+      } else {
+        setMessage("Failed to purchase boost. Please try again later.");
+      }
+    }
+  };
+
   return (
     <Layout>
       <div className="flex flex-col min-h-screen pb-20">
-        {/* Main content */}
-        <div className="flex-grow">
-          <div className="text-center p-5">
-            <h1 className="text-3xl font-bold p-2">🚀 Store</h1>
-            <p className="p-2">
-              Purchase utilities to accelerate your mineral mining speed!
-            </p>
-          </div>
+        <div className="text-center p-5">
+          <h1 className="text-3xl font-bold p-2">🚀 Store</h1>
+          <p className="p-2">Purchase utilities to accelerate your mineral mining speed!</p>
+          {coins !== null && <p>Your Coins: {coins}</p>}
+          {message && <p className="text-red-500 mt-2">{message}</p>}
+        </div>
 
-          {/* Card Section */}
-          <div className="p-3">
-            <div className="card bg-base-100 shadow-md text-white border-2 border-accent shadow-glow">
-              <div className="card-body flex justify-center items-center">
-                <h2 className="card-title text-center text-2xl font-bold">
-                  Welcome to the shop
-                </h2>
-              </div>
-            </div>
-          </div>
+        <div className="card bg-neutral text-white p-5 shadow-lg m-3 shadow-md">
+          <h2 className="card-title text-center mb-4">Boost Cards</h2>
+          <div className="flex flex-col gap-4">
+            {cards.map((card, index) => (
+              <div
+                key={index}
+                className="flex items-center bg-secondary text-white p-4 rounded-xl"
+              >
+                <img
+                  src={card.imageUrl}
+                  alt={card.title}
+                  className="w-20 h-20 object-contain mr-4 rounded-xl"
+                />
 
-          {/* Horizontal Cards */}
-          <div className="card bg-neutral text-white p-5 shadow-lg m-3 shadow-md">
-            <h2 className="card-title text-center mb-4">Boost Cards</h2>
-            <div className="flex flex-col gap-4">
-              {cards.map((card, index) => (
-                <div
-                  key={index}
-                  className="flex items-center bg-secondary text-white p-4 rounded-xl  "
-                >
-                  {/* Card Image */}
-                  <img
-                    src={card.imageUrl}
-                    alt={card.title}
-                    className="w-20 h-20 object-contain mr-4 rounded-xl"
-                  />
-
-                  {/* Card Details */}
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg">{card.title}</h3>
-                    <p className="font-semibold">{card.price} GTL</p>
-                    <p className="text-sm">Owned: {card.owned}</p>
-                  </div>
-
-                  {/* Buy Button */}
-                  <button className="btn btn-base-100 ml-4 rounded-xl border-2  ">Buy</button>
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg">{card.title}</h3>
+                  <p className="font-semibold">{card.price} GTL</p>
+                  <p className="text-sm">
+                    Owned:{" "}
+                    {
+                      boosts.find((boost) => boost.title === card.title)
+                        ?.owned ?? 0
+                    }
+                  </p>
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
 
-        {/* Card Section 2*/}
-        <div className="p-3">
-            <div className="card bg-base-100 shadow-md text-white border-2 border-accent shadow-glow">
-              <div className="card-body flex justify-center items-center">
-                <h2 className="card-title text-center text-2xl font-bold">
-                  Collections
-                </h2>
+                <button
+                  className="btn btn-base-100 ml-4 rounded-xl border-2"
+                  onClick={() => handleBuyBoost(card.title)}
+                >
+                  Buy
+                </button>
               </div>
-            </div>
+            ))}
           </div>
-              
-        
-          <div className="card bg-neutral text-white p-5 shadow-lg m-3 shadow-md">
-    <h2 className="card-title text-center mb-4">Periodic table</h2>
-    <div className="grid grid-cols-2 gap-4">
-      {minerals.map((card, index) => (
-        <div
-          key={index}
-          className="flex items-center bg-secondary text-white p-4 rounded-xl"
-        >
-          {/* Card Image */}
-          <img
-            src={card.imageUrl}
-            className="w-22 h-22 object-contain mr-4 rounded-xl"
-          />
-
         </div>
-      ))}
-    </div>
-  </div>
-
-
-    
       </div>
     </Layout>
   );
