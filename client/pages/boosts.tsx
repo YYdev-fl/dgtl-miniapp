@@ -81,18 +81,17 @@ const Store: React.FC = () => {
   const handlePurchase = async (boostId: string) => {
     try {
       const response = await fetch('/api/buyboost', {
-        method: 'POST', // Specify POST method
+        method: 'POST', 
         headers: {
-          'Content-Type': 'application/json', // Ensure the server knows the content type
+          'Content-Type': 'application/json', 
         },
-        body: JSON.stringify({ boostId }), // Send boostId in the body
+        body: JSON.stringify({ boostId }), 
       });
   
       if (response.ok) {
-        const data = await response.json(); // Parse JSON response
-        // Update user data after a successful purchase
+        const data = await response.json();
         setUserData((prev) => {
-          if (!prev) return prev; // Ensure prev exists
+          if (!prev) return prev; 
           const newBoosts = { ...prev.boosts };
           newBoosts[boostId] = (newBoosts[boostId] || 0) + 1;
           return {
@@ -108,8 +107,8 @@ const Store: React.FC = () => {
         alert(`Error: ${errorData.message}`);
       }
     } catch (error) {
-      console.error('Error purchasing boost:', error);
-      alert('Failed to purchase boost. Please try again.');
+      console.error(error);
+      alert('Ne poluchilos kupit.');
     }
   };
 

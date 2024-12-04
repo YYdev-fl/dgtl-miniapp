@@ -33,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Fetch the boost card details
     const boostCard = await BoostCardModel.findOne({ id: boostId }).select("price").lean();
-
+    console.log("Boost: ", {boostCard})
     if (!boostCard) {
       return res.status(404).json({ message: `Boost with ID '${boostId}' not found.` });
     }
