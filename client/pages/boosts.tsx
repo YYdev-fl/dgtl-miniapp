@@ -79,7 +79,7 @@ const Store: React.FC = () => {
 
   const handlePurchase = async (boostId: string) => {
     try {
-      const response = await axios.post('/api/purchase-boost', { boostId });
+      const response = await axios.post('/api/buyboost', { boostId });
       if (response.status === 200) {
         // Update user data after a successful purchase
         setUserData((prev) => {
