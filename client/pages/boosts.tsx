@@ -3,18 +3,10 @@ import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { IUser } from '../models/User';
-
+import { IBoostCard } from '../models/Boosts';
 
 // Type definitions for Boost and Mineral Cards
-interface BoostCard {
-  _id: string; // MongoDB ObjectId
-  title: string;
-  price: number;
-  imageUrl: string;
-  description: string;
-  availability: boolean;
-  id: string;
-}
+
 
 interface MineralCard {
   imageUrl: string;
@@ -44,7 +36,7 @@ const minerals: MineralCard[] = [
 
 const Store: React.FC = () => {
   const { data: session } = useSession();
-  const [boostCards, setBoostCards] = useState<BoostCard[]>([]);
+  const [boostCards, setBoostCards] = useState<IBoostCard[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [userData, setUserData] = useState<IUser | null>(null);
@@ -85,6 +77,29 @@ const Store: React.FC = () => {
     }
   }, [session]);
 
+  const handlePurchase = async (boostId: string) => {
+    try {
+      const response = await axios.post('/api/purchase-boost', { boostId });
+      if (response.status === 200) {
+        // Update user data after a successful purchase
+        setUserData((prev) => {
+          if (!prev) return prev; // Ensure prev exists
+          const newBoosts = { ...prev.boosts };
+          newBoosts[boostId] = (newBoosts[boostId] || 0) + 1;
+          return {
+            ...prev,
+            coins: prev.coins - (boostCards.find((card) => card.id === boostId)?.price || 0),
+            boosts: newBoosts,
+          } as IUser; // Type assertion
+        });
+        alert('Boost purchased successfully!');
+      }
+    } catch (error) {
+      console.error('Error purchasing boost:', error);
+      alert('Failed to purchase boost. Please try again.');
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -119,7 +134,7 @@ const Store: React.FC = () => {
           <div className="flex flex-col gap-4">
             {boostCards.map((card) => (
               <div
-                key={card._id}
+                key={card.id}
                 className="flex items-center bg-secondary text-white p-4 rounded-xl"
               >
                 <img
@@ -134,7 +149,9 @@ const Store: React.FC = () => {
                   <p className="text-sm">Owned: {userData?.boosts?.[card.id] || 0}</p>
                 </div>
 
-                <button className="btn btn-base-100 ml-4 rounded-xl border-2">
+                <button 
+                className="btn btn-base-100 ml-4 rounded-xl border-2"
+                onClick={() => handlePurchase(card.id)}>
                   Buy
                 </button>
               </div>
