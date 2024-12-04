@@ -15,6 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   
   if (req.method !== 'POST') {
     res.status(405).json({ message: "Method ot Allowed" });
+    console.log(req)
     console.error(`Invalid method: ${req.method}. Only POST is allowed.`);
     return;
   } 
