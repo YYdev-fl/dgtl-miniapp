@@ -1,11 +1,14 @@
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/router';
 import Layout from '../components/layout';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { IUser } from '../models/User';
 
 const Index = () => {
   const { data: session, status } = useSession();
-  const [userData, setUserData] = useState({ coins: 0, tickets: 0});
+  const router = useRouter();
+  const [userData, setUserData] = useState<IUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,17 +21,17 @@ const Index = () => {
       } catch (error) {
         console.error('Error fetching user data:', error);
       } finally {
-        setLoading(false); // Ensure loading is stopped after the fetch
+        setLoading(false);
       }
     };
 
-    // Only fetch data if the user is authenticated
     if (status === 'authenticated') {
       fetchUserData();
     } else if (status === 'unauthenticated') {
-      setLoading(false); // Stop loading if unauthenticated
+      setLoading(false);
+      router.replace('/authpage'); // Redirect if unauthenticated
     }
-  }, [status]);
+  }, [status, router]);
 
   if (status === 'loading' || loading) {
     return (
@@ -38,11 +41,12 @@ const Index = () => {
     );
   }
 
-  if (status === 'unauthenticated') {
-    if (typeof window !== 'undefined') {
-      window.location.href = '/authpage';
-    }
-    return null;
+  if (!userData) {
+    return (
+      <div className="flex items-center justify-center h-screen w-screen bg-base-100">
+        <p className="text-lg text-red-500">Failed to load user data. Please try again.</p>
+      </div>
+    );
   }
 
   return (
@@ -51,7 +55,7 @@ const Index = () => {
         {/* Main Card */}
         <div className="card bg-neutral shadow-xl mb-3">
           <div className="card-body text-white p-4">
-            <h2 className="card-title text-2xl">{session?.user.username}</h2>
+            <h2 className="card-title text-2xl">{session?.user.username || 'Unknown User'}</h2>
           </div>
         </div>
 
@@ -62,19 +66,22 @@ const Index = () => {
             <div className="stat-value text-white text-3xl">{userData.coins} GTL</div>
           </div>
           <div className="stat">
-            <div className="stat-title">LVL</div>
+            <div className="stat-title">Tickets</div>
+            <div className="stat-value text-white text-3xl">{userData.tickets} ⛏</div>
+          </div>
+          <div className="stat">
+            <div className="stat-title">Level</div>
             <div className="stat-value text-white text-5xl">1</div>
           </div>
         </div>
 
-        {/* New Level Card Section */}
+        {/* Levels Section */}
         <div className="card bg-neutral mt-4">
           <div className="card-body p-4 text-white">
             <h2 className="card-title text-xl mb-3">Levels</h2>
 
-            {/* Level 1 */}
+            {/* Example Level */}
             <div className="relative bg-neutral-content rounded-lg mb-2 shadow-inner overflow-hidden">
-              {/* Badge Container */}
               <div className="flex absolute top-2 left-2 flex-wrap gap-2 z-10">
                 <div className="badge badge-outline">Au</div>
                 <div className="badge badge-outline">Fe</div>
@@ -82,20 +89,18 @@ const Index = () => {
                 <div className="badge badge-outline">Br</div>
               </div>
 
-              {/* Background Image */}
               <img
                 src="/level1-bg.png"
                 alt="Level 1"
                 className="h-[150px] w-full object-cover"
               />
 
-              {/* Bottom Content */}
               <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black to-transparent flex items-center justify-between">
                 <div>
                   <h2 className="text-lg font-bold text-white">Level 1</h2>
-                  <p className="text-m font-bold">{userData.tickets} ⛏</p>
+                  <p className="text-m font-bold">{userData?.tickets || 0} ⛏</p>
                 </div>
-                <Link href={"/game"}>
+                <Link href="/game">
                   <button className="btn btn-md border-2 border-accent shadow-glow">Play</button>
                 </Link>
               </div>

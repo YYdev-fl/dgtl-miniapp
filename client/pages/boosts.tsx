@@ -43,12 +43,13 @@ const Store: React.FC = () => {
   const [boostCards, setBoostCards] = useState<BoostCard[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-
+  const [userData, setUserData] = useState({ coins: 0, tickets: 0});
+  
   useEffect(() => {
     const fetchBoostCards = async () => {
       try {
         const response = await axios.get("/api/boost-cards");
-        setBoostCards(response.data); // Update state with fetched cards
+        setBoostCards(response.data); 
       } catch (err) {
         console.error("Error fetching boost cards:", err);
         setError("Failed to load boost cards.");
@@ -60,14 +61,34 @@ const Store: React.FC = () => {
     fetchBoostCards();
   }, []);
 
-  console.log(boostCards)
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const res = await fetch('/api/user/data');
+        if (!res.ok) throw new Error('Failed to fetch user data');
+        const data = await res.json();
+        setUserData(data);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setLoading(false); // Ensure loading is stopped after the fetch
+      }
+    };
+
+    // Only fetch data if the user is authenticated
+    if (status === 'authenticated') {
+      fetchUserData();
+    } else if (status === 'unauthenticated') {
+      setLoading(false); // Stop loading if unauthenticated
+    }
+  }, [status]);
 
   if (loading) {
     return (
       <Layout>
-        <div className="text-center">
-          <p>Loading boost cards...</p>
-        </div>
+        <div className="flex items-center justify-center h-screen w-screen bg-base-100">
+        <div className="loading loading-spinner loading-lg mb-4"></div>
+      </div>
       </Layout>
     );
   }
@@ -91,7 +112,7 @@ const Store: React.FC = () => {
         </div>
 
         {/* Boost Cards Section */}
-        <div className="card bg-neutral text-white p-5 shadow-lg m-3 shadow-md">
+        <div className="card bg-neutral text-white p-5 shadow-lg m-3">
           <h2 className="card-title text-center mb-4">Boost Cards</h2>
           <div className="flex flex-col gap-4">
             {boostCards.map((card) => (
@@ -108,6 +129,7 @@ const Store: React.FC = () => {
                 <div className="flex-1">
                   <h3 className="font-bold text-lg">{card.title}</h3>
                   <p className="font-semibold">{card.price} GTL</p>
+                  <p className="text-sm">Owned: 0 </p>
                 </div>
 
                 <button className="btn btn-base-100 ml-4 rounded-xl border-2">
@@ -119,7 +141,7 @@ const Store: React.FC = () => {
         </div>
 
         {/* Mineral Cards Section */}
-        <div className="card bg-neutral text-white p-5 shadow-lg m-3 shadow-md">
+        <div className="card bg-neutral text-white p-5 shadow-lg m-3">
           <h2 className="card-title text-center mb-4">Mineral Cards</h2>
           <div className="flex flex-col gap-4">
             {minerals.map((mineral, index) => (

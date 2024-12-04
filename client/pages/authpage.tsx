@@ -54,7 +54,9 @@ const AuthPage = () => {
   }
 
   if (status === 'loading') {
-    return <div>Loading...</div>
+    return <div className="flex items-center justify-center h-screen w-screen bg-base-100">
+    <div className="loading loading-spinner loading-lg mb-4"></div>
+  </div>
   
   } 
 

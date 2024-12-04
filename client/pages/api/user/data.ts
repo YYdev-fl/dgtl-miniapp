@@ -21,12 +21,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!userData) {
       return res.status(404).json({ error: 'User not found' });
     }
-
-    // Destructure necessary fields from the user data
-    const { coins, tickets} = userData;
-    console.log(userData)
-    // Return user data in response
-    return res.status(200).json({ coins, tickets});
+   
+    return res.status(200).json(userData);
   } catch (error) {
     console.error('Error fetching user data:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
