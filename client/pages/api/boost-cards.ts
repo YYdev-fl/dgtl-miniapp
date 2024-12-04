@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ error: "Database connection failed." });
     }
 
-    const boostCards = await db.collection("boost-cards").find({ availability: true }).toArray();
+    const boostCards = await db.collection("boosts-cards").find({ availability: true }).toArray();
     return res.status(200).json(boostCards);
   } catch (error) {
     console.error("Error fetching boost cards:", error);

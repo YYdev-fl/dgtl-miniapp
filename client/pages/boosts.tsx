@@ -60,6 +60,8 @@ const Store: React.FC = () => {
     fetchBoostCards();
   }, []);
 
+  console.log(boostCards)
+
   if (loading) {
     return (
       <Layout>
