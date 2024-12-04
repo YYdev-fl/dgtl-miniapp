@@ -45,6 +45,7 @@ const Store: React.FC = () => {
     const fetchBoostCards = async () => {
       try {
         const response = await axios.get("/api/boost-cards");
+        console.log("Fetched boost cards:", response.data);
         setBoostCards(response.data); 
       } catch (err) {
         console.error("Error fetching boost cards:", err);
