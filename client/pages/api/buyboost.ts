@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
   
   if (req.method !== 'POST') {
-    res.status(405).json({ message: "Method Not Allowed" });
+    res.status(405).json({ message: "Method ot Allowed" });
     return;
   } 
 
@@ -30,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Fetch the boost card details
     const boostCard = await BoostCardModel.findOne({ id: boostId }).select("price").lean();
-    
+
     if (!boostCard) {
       return res.status(404).json({ message: `Boost with ID '${boostId}' not found.` });
     }
