@@ -108,7 +108,6 @@ const Store: React.FC = () => {
                 <div className="flex-1">
                   <h3 className="font-bold text-lg">{card.title}</h3>
                   <p className="font-semibold">{card.price} GTL</p>
-                  <p className="text-sm">{card.description}</p>
                 </div>
 
                 <button className="btn btn-base-100 ml-4 rounded-xl border-2">
