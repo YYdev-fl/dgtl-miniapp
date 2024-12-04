@@ -6,26 +6,31 @@ import { connectToDatabase } from "@/lib/mongodb";
 import { authOptions } from "./auth/[...nextauth]";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method Not Allowed" });
+
+  const session = await getServerSession(req, res, authOptions);
+
+  if (!session?.user?.telegramId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  if (req.method !== 'POST') {
+    res.status(405).json({ message: "Method Not Allowed" });
+    return;
+  } 
+
+  const { boostId } = req.body;
+
+  if (!boostId || typeof boostId !== "string") {
+    return res.status(400).json({ message: "Invalid boost ID provided." });
   }
 
   try {
+
     await connectToDatabase();
-
-    const session = await getServerSession(req, res, authOptions);
-    if (!session?.user?.telegramId) {
-      return res.status(401).json({ message: "Unauthorized: Please log in." });
-    }
-
-    const { boostId } = req.body;
-
-    if (!boostId || typeof boostId !== "string") {
-      return res.status(400).json({ message: "Invalid boost ID provided." });
-    }
 
     // Fetch the boost card details
     const boostCard = await BoostCardModel.findOne({ id: boostId }).select("price").lean();
+    
     if (!boostCard) {
       return res.status(404).json({ message: `Boost with ID '${boostId}' not found.` });
     }
