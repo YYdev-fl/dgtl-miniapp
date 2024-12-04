@@ -79,7 +79,7 @@ const Store: React.FC = () => {
 
   const handlePurchase = async (boostId: string) => {
     try {
-      const response = await fetch('/api/purchase-boost', {
+      const response = await fetch('/api/buyboost', {
         method: 'POST', // Specify POST method
         headers: {
           'Content-Type': 'application/json', // Ensure the server knows the content type
