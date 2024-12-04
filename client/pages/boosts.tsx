@@ -2,7 +2,7 @@ import Layout from "../components/layout";
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
-import { IUser } from '../models/User';
+import { IUserState } from '../models/User';
 import { IBoostCard } from '../models/Boosts';
 
 // Type definitions for Boost and Mineral Cards
@@ -39,7 +39,7 @@ const Store: React.FC = () => {
   const [boostCards, setBoostCards] = useState<IBoostCard[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [userData, setUserData] = useState<IUser | null>(null);
+  const [userData, setUserData] = useState<IUserState | null>(null);
 
   useEffect(() => {
     const fetchBoostCards = async () => {
@@ -79,8 +79,16 @@ const Store: React.FC = () => {
 
   const handlePurchase = async (boostId: string) => {
     try {
-      const response = await axios.post('/api/buyboost', { boostId });
-      if (response.status === 200) {
+      const response = await fetch('/api/purchase-boost', {
+        method: 'POST', // Specify POST method
+        headers: {
+          'Content-Type': 'application/json', // Ensure the server knows the content type
+        },
+        body: JSON.stringify({ boostId }), // Send boostId in the body
+      });
+  
+      if (response.ok) {
+        const data = await response.json(); // Parse JSON response
         // Update user data after a successful purchase
         setUserData((prev) => {
           if (!prev) return prev; // Ensure prev exists
@@ -90,9 +98,13 @@ const Store: React.FC = () => {
             ...prev,
             coins: prev.coins - (boostCards.find((card) => card.id === boostId)?.price || 0),
             boosts: newBoosts,
-          } as IUser; // Type assertion
+          };
         });
+        
         alert('Boost purchased successfully!');
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.message}`);
       }
     } catch (error) {
       console.error('Error purchasing boost:', error);

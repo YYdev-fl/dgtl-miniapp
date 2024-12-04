@@ -10,6 +10,7 @@ export interface IBoostCard extends Document {
   id: string; 
 }
 
+
 const BoostCardSchema: Schema<IBoostCard> = new Schema<IBoostCard>({
   title: {
     type: String,

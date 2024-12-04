@@ -15,6 +15,18 @@ export interface IUser extends Document {
   createdAt: Date;
 }
 
+export interface IUserState {
+  _id: string;
+  telegramId: string;
+  firstName: string;
+  lastName?: string;
+  username?: string;
+  coins: number;
+  tickets: number;
+  boosts: {
+    [key: string]: number;
+  };
+}
 
 // Define the Mongoose schema for the User model
 const UserSchema: Schema<IUser> = new Schema<IUser>({
