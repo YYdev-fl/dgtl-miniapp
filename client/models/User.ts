@@ -10,10 +10,7 @@ export interface IUser extends Document {
   coins: number;
   tickets: number;
   boosts: {
-    boost1: number;
-    boost2: number;
-    boost3: number;
-    boost4: number;
+    [key: string]: number; 
   };
   createdAt: Date;
 }

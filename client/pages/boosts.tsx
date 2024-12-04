@@ -2,6 +2,8 @@ import Layout from "../components/layout";
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import axios from "axios";
+import { IUser } from '../models/User';
+
 
 // Type definitions for Boost and Mineral Cards
 interface BoostCard {
@@ -11,6 +13,7 @@ interface BoostCard {
   imageUrl: string;
   description: string;
   availability: boolean;
+  id: string;
 }
 
 interface MineralCard {
@@ -40,11 +43,12 @@ const minerals: MineralCard[] = [
 ];
 
 const Store: React.FC = () => {
+  const { data: session } = useSession();
   const [boostCards, setBoostCards] = useState<BoostCard[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [userData, setUserData] = useState({ coins: 0, tickets: 0});
-  
+  const [userData, setUserData] = useState<IUser | null>(null);
+
   useEffect(() => {
     const fetchBoostCards = async () => {
       try {
@@ -71,17 +75,15 @@ const Store: React.FC = () => {
       } catch (error) {
         console.error('Error fetching user data:', error);
       } finally {
-        setLoading(false); // Ensure loading is stopped after the fetch
+        setLoading(false); 
       }
     };
-
-    // Only fetch data if the user is authenticated
-    if (status === 'authenticated') {
+    if (session) {
       fetchUserData();
-    } else if (status === 'unauthenticated') {
-      setLoading(false); // Stop loading if unauthenticated
+    } else {
+      setLoading(false);
     }
-  }, [status]);
+  }, [session]);
 
   if (loading) {
     return (
@@ -129,7 +131,7 @@ const Store: React.FC = () => {
                 <div className="flex-1">
                   <h3 className="font-bold text-lg">{card.title}</h3>
                   <p className="font-semibold">{card.price} GTL</p>
-                  <p className="text-sm">Owned: 0 </p>
+                  <p className="text-sm">Owned: {userData?.boosts?.[card.id] || 0}</p>
                 </div>
 
                 <button className="btn btn-base-100 ml-4 rounded-xl border-2">
