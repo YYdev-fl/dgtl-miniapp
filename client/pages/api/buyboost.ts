@@ -19,7 +19,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } 
 
   const { boostId } = req.body;
-
+  console.log(req.body)
+  console.log(boostId)
   if (!boostId || typeof boostId !== "string") {
     return res.status(400).json({ message: "Invalid boost ID provided." });
   }
