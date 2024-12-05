@@ -12,7 +12,7 @@ export function showNotification(message: string, type: NotificationType) {
     // Create the notification
     const notification = document.createElement("div");
     notification.className = `
-      m-2 w-full px-4 py-3 rounded-md shadow-md text-center
+      m-1 w-full px-4 py-3 rounded-md shadow-md text-center
       whitespace-nowrap overflow-hidden text-ellipsis animate-slideIn pointer-events-auto
       ${type === "success" 
         ? "bg-green-500 text-white" 
