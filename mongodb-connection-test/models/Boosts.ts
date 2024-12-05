@@ -40,10 +40,9 @@ const BoostCardSchema: Schema<IBoostCard> = new Schema<IBoostCard>({
     index: true,
   },
   },
-  {
-    collection: "boosts-cards", // Explicitly specify the collection name
-  },
-);
+{
+  collection: "boosts-cards", // Explicitly specify the collection name
+},);
 
 // Export the BoostCard model if it's not already created
 const BoostCardModel: Model<IBoostCard> = mongoose.models.BoostCard || mongoose.model<IBoostCard>('BoostCard', BoostCardSchema);
