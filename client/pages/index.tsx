@@ -66,10 +66,6 @@ const Index = () => {
             <div className="stat-value text-white text-3xl">{userData.coins} GTL</div>
           </div>
           <div className="stat">
-            <div className="stat-title">Tickets</div>
-            <div className="stat-value text-white text-3xl">{userData.tickets} ⛏</div>
-          </div>
-          <div className="stat">
             <div className="stat-title">Level</div>
             <div className="stat-value text-white text-5xl">1</div>
           </div>
