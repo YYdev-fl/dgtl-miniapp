@@ -4,9 +4,7 @@ import { useSession } from "next-auth/react";
 import axios from "axios";
 import { IUserState } from '../models/User';
 import { IBoostCard } from '../models/Boosts';
-
-// Type definitions for Boost and Mineral Cards
-
+import { showNotification } from '../lib/notifications';
 
 interface MineralCard {
   imageUrl: string;
@@ -41,6 +39,18 @@ const Store: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [userData, setUserData] = useState<IUserState | null>(null);
 
+  function triggerSuccess() {
+    showNotification('Action was successful!', 'success');
+  }
+  
+  function triggerWarning() {
+    showNotification('This is a warning!', 'warning');
+  }
+  
+  function triggerError() {
+    showNotification('An error occurred!', 'error');
+  }
+  
   useEffect(() => {
     const fetchBoostCards = async () => {
       try {
@@ -101,17 +111,18 @@ const Store: React.FC = () => {
           };
         });
         
-        alert('Boost purchased successfully!');
+        triggerSuccess()
       } else {
         const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
+        triggerError()
       }
     } catch (error) {
       console.error(error);
-      alert('Ne poluchilos kupit.');
+      triggerWarning()
     }
   };
 
+  
   if (loading) {
     return (
       <Layout>

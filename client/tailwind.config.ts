@@ -29,8 +29,21 @@ const config: Config = {
       },
       boxShadow: {
         glow: '0 0 12px rgba(255, 16, 240, 0.5)', // Example glow color: neon green
-        
-      }
+      },
+      keyframes: {
+        slideInFromTop: {
+          '0%': { transform: 'translateY(-100%)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        slideOutToTop: {
+          '0%': { transform: 'translateY(0)', opacity: '1' },
+          '100%': { transform: 'translateY(-100%)', opacity: '0' },
+        },
+      },
+      animation: {
+        slideIn: 'slideInFromTop 0.5s ease-out forwards',
+        slideOut: 'slideOutToTop 0.5s ease-out forwards',
+      },
     },
   },
   plugins: [require("daisyui")],
