@@ -40,7 +40,7 @@ const Store: React.FC = () => {
   const [userData, setUserData] = useState<IUserState | null>(null);
 
   function triggerSuccess() {
-    showNotification('Action was successful!', 'success');
+    showNotification('Purchase was succesfull!', 'success');
   }
   
   function triggerWarning() {
@@ -48,7 +48,7 @@ const Store: React.FC = () => {
   }
   
   function triggerError() {
-    showNotification('An error occurred!', 'error');
+    showNotification('Not enough tokens!', 'error');
   }
   
   useEffect(() => {
