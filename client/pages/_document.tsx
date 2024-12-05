@@ -6,6 +6,7 @@ export default function Document() {
       <Head>
         {/* Include the Telegram Web App JavaScript library */}
         <script src="https://telegram.org/js/telegram-web-app.js" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"></meta>
       </Head>
       <body>
         <Main />
