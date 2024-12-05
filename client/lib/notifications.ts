@@ -2,12 +2,11 @@
 type NotificationType = 'success' | 'warning' | 'error';
 
 export function showNotification(message: string, type: NotificationType) {
-    // Create notification element
+    // Create the notification element
     const notification = document.createElement("div");
     notification.className = `
-      fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
-      z-50 p-4 w-11/12 max-w-md text-center rounded-md shadow-md 
-      animate-slideIn ${
+      fixed top-5 left-1/2 transform -translate-x-1/2 
+      z-50 p-4 w-[90%] max-w-sm text-center rounded-md shadow-md animate-slideIn ${
         type === "success"
           ? "bg-green-500 text-white"
           : type === "warning"
@@ -15,8 +14,10 @@ export function showNotification(message: string, type: NotificationType) {
           : "bg-red-500 text-white"
       }`;
   
-    // Set the notification text
+    // Add the notification text
     notification.innerText = message;
+  
+    // Append to the body
     document.body.appendChild(notification);
   
     // Automatically hide the notification after 3 seconds
