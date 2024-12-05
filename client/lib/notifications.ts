@@ -15,6 +15,12 @@ export function showNotification(message: string, type: NotificationType) {
       }`;
   
     // Add the notification text
+    notification.style.position = "fixed";
+    notification.style.top = "20px"; // Adjust as necessary
+    notification.style.left = "50%";
+    notification.style.transform = "translateX(-50%)";
+  
+    // Set the notification content
     notification.innerText = message;
   
     // Append to the body
