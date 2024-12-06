@@ -14,7 +14,11 @@ const LevelSchema = new Schema<ILevel>({
   backgroundUrl: { type: String, default: "" },
   order: { type: Number, required: true, unique: true },
   availability: { type: Boolean, required: true },
-});
+ 
+},
+{
+  collection: "leveldata", // Explicitly specify the collection name
+},);
 
 const Level: Model<ILevel> = mongoose.models.Level || mongoose.model<ILevel>('Level', LevelSchema);
 
