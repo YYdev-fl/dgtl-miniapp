@@ -4,11 +4,14 @@ import Layout from '../components/layout';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { IUser } from '../models/User';
+import { ILevel } from '../models/Level';
 
 const Index = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
+
   const [userData, setUserData] = useState<IUser | null>(null);
+  const [levels, setLevels] = useState<ILevel[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,17 +23,31 @@ const Index = () => {
         setUserData(data);
       } catch (error) {
         console.error('Error fetching user data:', error);
-      } finally {
+      } 
+    };
+
+    const fetchLevels = async () => {
+      try {
+        const res = await fetch('/api/leveldata');
+        if (!res.ok) throw new Error('Failed to fetch levels');
+        const data = await res.json();
+        setLevels(data);
+      } catch (error) {
+        console.error('Error fetching levels:', error);
+      } 
+    };
+
+    const initData = async () => {
+      if (status === 'authenticated') {
+        await Promise.all([fetchUserData(), fetchLevels()]);
         setLoading(false);
+      } else if (status === 'unauthenticated') {
+        setLoading(false);
+        router.replace('/authpage'); // Redirect if unauthenticated
       }
     };
 
-    if (status === 'authenticated') {
-      fetchUserData();
-    } else if (status === 'unauthenticated') {
-      setLoading(false);
-      router.replace('/authpage'); // Redirect if unauthenticated
-    }
+    initData();
   }, [status, router]);
 
   if (status === 'loading' || loading) {
@@ -67,6 +84,7 @@ const Index = () => {
           </div>
           <div className="stat">
             <div className="stat-title">Level</div>
+            {/* Assuming userData has a level field or you derive from levels */}
             <div className="stat-value text-white text-5xl">1</div>
           </div>
         </div>
@@ -75,32 +93,50 @@ const Index = () => {
         <div className="card bg-neutral mt-4">
           <div className="card-body p-4 text-white">
             <h2 className="card-title text-xl mb-3">Levels</h2>
+            {levels.length > 0 ? (
+            levels.map((level) => (
+              <div 
+                key={level.order} 
+                className={`relative rounded-lg mb-2 shadow-inner overflow-hidden ${level.availability ? 'bg-neutral-content' : 'bg-gray-500'}`
+              }>
+                {level.availability ? (
+                  <>
+                    {/* Badges */}
+                    <div className="flex absolute top-2 left-2 flex-wrap gap-2 z-10">
+                      {level.badges.map((badge, i) => (
+                        <div className="badge badge-outline" key={i}>{badge}</div>
+                      ))}
+                    </div>
+                    
+                    {/* Level background image */}
+                    <img
+                      src={level.backgroundUrl}
+                      alt={level.name}
+                      className="h-[150px] w-full object-cover"
+                    />
 
-            {/* Example Level */}
-            <div className="relative bg-neutral-content rounded-lg mb-2 shadow-inner overflow-hidden">
-              <div className="flex absolute top-2 left-2 flex-wrap gap-2 z-10">
-                <div className="badge badge-outline">Au</div>
-                <div className="badge badge-outline">Fe</div>
-                <div className="badge badge-outline">C</div>
-                <div className="badge badge-outline">Br</div>
+                    <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black to-transparent flex items-center justify-between">
+                      <div>
+                        <h2 className="text-lg font-bold text-white">{level.name}</h2>
+                        {/* If you have tickets or other data, show them here */}
+                      </div>
+                      <Link href="/game">
+                        <button className="btn btn-md border-2 border-accent shadow-glow">Play</button>
+                      </Link>
+                    </div>
+                  </>
+                ) : (
+                  /* Locked state */
+                  <div className="h-[150px] w-full flex items-center justify-center">
+                    <span className="text-white text-xl font-bold">Locked</span>
+                  </div>
+                )}
               </div>
+            ))
+          ) : (
+            <p>No levels available.</p>
+          )}
 
-              <img
-                src="/level1-bg.png"
-                alt="Level 1"
-                className="h-[150px] w-full object-cover"
-              />
-
-              <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black to-transparent flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-bold text-white">Level 1</h2>
-                  <p className="text-m font-bold">{userData?.tickets || 0} ⛏</p>
-                </div>
-                <Link href="/game">
-                  <button className="btn btn-md border-2 border-accent shadow-glow">Play</button>
-                </Link>
-              </div>
-            </div>
           </div>
         </div>
       </div>
