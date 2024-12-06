@@ -97,7 +97,7 @@ const Index = () => {
             levels.map((level) => (
               <div 
                 key={level.order} 
-                className={`relative rounded-lg mb-2 shadow-inner overflow-hidden ${level.availability ? 'bg-neutral-content' : 'bg-gray-500'}`
+                className={`relative rounded-lg mb-2 shadow-inner overflow-hidden ${level.availability ? 'bg-neutral-content' : 'bg-black'}`
               }>
                 {level.availability ? (
                   <>
@@ -127,7 +127,7 @@ const Index = () => {
                   </>
                 ) : (
                   /* Locked state */
-                  <div className="h-[150px] w-full flex items-center justify-center">
+                  <div className="h-[150px] w-full flex items-center justify-center border-2 border-accent shadow-glow">
                     <span className="text-white text-xl font-bold">Locked</span>
                   </div>
                 )}
