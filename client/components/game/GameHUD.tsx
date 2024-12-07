@@ -67,25 +67,9 @@ const GameHUD: React.FC<GameHUDProps> = ({ score, timeLeft }) => {
                 src={boost.imageUrl}
                 alt={`Boost ${boost.id}`}
                 className="w-full h-full object-contain rounded-xl"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "contain",
-                }}
               />
               <span
-                className="absolute text-white bg-gradient-to-t from-black to-transparent text-xs font-bold px-1"
-                style={{
-                  position: "absolute",
-                  bottom: "0",
-                  left: "0",
-                  backgroundColor: "rgba(0, 0, 0, 0.7)",
-                  color: "white",
-                  fontSize: "0.75rem",
-                  fontWeight: "bold",
-                  padding: "2px 4px",
-                  borderRadius: "4px 0 0 0",
-                }}
+                className="absolute bottom-0 left-0 text-white bg-black bg-opacity-70 text-xs font-bold px-1 rounded-tl-md"
               >
                 x{boost.quantity}
               </span>
