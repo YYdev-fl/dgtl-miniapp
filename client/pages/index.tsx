@@ -60,9 +60,11 @@ const Index = () => {
 
   if (!userData) {
     return (
+      <Layout>
       <div className="flex items-center justify-center h-screen w-screen bg-base-100">
         <p className="text-lg text-red-500">Failed to load user data. Please try again.</p>
       </div>
+      </Layout>
     );
   }
 
