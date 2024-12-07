@@ -45,37 +45,55 @@ const GameHUD: React.FC<GameHUDProps> = ({ score, timeLeft }) => {
       quantity: userBoosts[boost.id],
     }));
 
-  return (
-    <>
-      {/* Score and Time */}
-      <h1 className="absolute top-4 left-4 text-2xl z-20 pointer-events-none">
-        Score: {score}
-      </h1>
-      <h2 className="absolute top-4 right-4 text-2xl z-20 pointer-events-none">
-        Time Left: {timeLeft}s
-      </h2>
-
-      {/* Boosts Display */}
-      <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-2">
-        {activeBoosts.map((boost) => (
-          <div
-            key={boost.id}
-            className="flex items-center gap-2 bg-base-100 p-2 rounded-md shadow-md"
-          >
-            <img
-              src={boost.imageUrl}
-              alt={boost.title}
-              className="w-8 h-8 rounded-md"
-            />
-            <div>
-              <p className="text-sm font-bold">{boost.title}</p>
-              <p className="text-xs">x{boost.quantity}</p>
+    return (
+      <>
+        {/* Score and Time */}
+        <h1 className="absolute top-4 left-4 text-2xl z-20 pointer-events-none">
+          Score: {score}
+        </h1>
+        <h2 className="absolute top-4 right-4 text-2xl z-20 pointer-events-none">
+          Time Left: {timeLeft}s
+        </h2>
+  
+        {/* Boosts Display */}
+        <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-2">
+          {activeBoosts.map((boost) => (
+            <div
+              key={boost.id}
+              className="relative w-16 h-16"
+              style={{ position: "relative", width: "64px", height: "64px" }}
+            >
+              <img
+                src={boost.imageUrl}
+                alt={`Boost ${boost.id}`}
+                className="w-full h-full object-contain"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                }}
+              />
+              <span
+                className="absolute bottom-0 left-0 text-white bg-black bg-opacity-70 text-xs font-bold px-1 py-0.5 rounded-tl-lg"
+                style={{
+                  position: "absolute",
+                  bottom: "0",
+                  left: "0",
+                  backgroundColor: "rgba(0, 0, 0, 0.7)",
+                  color: "white",
+                  fontSize: "0.75rem",
+                  fontWeight: "bold",
+                  padding: "2px 4px",
+                  borderRadius: "4px 0 0 0",
+                }}
+              >
+                x{boost.quantity}
+              </span>
             </div>
-          </div>
-        ))}
-      </div>
-    </>
-  );
-};
+          ))}
+        </div>
+      </>
+    );
+  };
 
 export default GameHUD;
