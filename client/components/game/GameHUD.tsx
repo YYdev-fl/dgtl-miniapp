@@ -69,7 +69,7 @@ const GameHUD: React.FC<GameHUDProps> = ({ score, timeLeft }) => {
                 className="w-full h-full object-contain rounded-xl"
               />
               <span
-                className="absolute bottom-2 left-2 text-white text-xs font-bold"
+                className="absolute bottom-1.5 left-1.5 text-white text-xs font-bold"
               >
                 x{boost.quantity}
               </span>
