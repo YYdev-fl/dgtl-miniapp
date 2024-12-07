@@ -74,7 +74,7 @@ const GameHUD: React.FC<GameHUDProps> = ({ score, timeLeft }) => {
                 }}
               />
               <span
-                className="absolute bottom-0 left-0 text-white bg-black bg-gradient-to-t from-black to-transparent text-xs font-bold px-1 py-0.5 rounded-tl-lg"
+                className="absolute text-white bg-gradient-to-t from-black to-transparent text-xs font-bold px-1"
                 style={{
                   position: "absolute",
                   bottom: "0",
