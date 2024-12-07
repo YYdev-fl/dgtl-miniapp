@@ -60,7 +60,7 @@ const GameHUD: React.FC<GameHUDProps> = ({ score, timeLeft }) => {
         {activeBoosts.map((boost) => (
           <div
             key={boost.id}
-            className="flex items-center gap-2 bg-white p-2 rounded-md shadow-md"
+            className="flex items-center gap-2 bg-base-100 p-2 rounded-md shadow-md"
           >
             <img
               src={boost.imageUrl}
