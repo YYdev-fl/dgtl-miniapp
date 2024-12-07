@@ -52,19 +52,21 @@ const Index = () => {
 
   if (status === 'loading' || loading) {
     return (
+      <Layout>
       <div className="flex items-center justify-center h-screen w-screen bg-base-100">
         <div className="loading loading-spinner loading-lg mb-4"></div>
       </div>
+      </Layout>
     );
   }
 
   if (!userData) {
     return (
-      <Layout>
+
       <div className="flex items-center justify-center h-screen w-screen bg-base-100">
         <p className="text-lg text-red-500">Failed to load user data. Please try again.</p>
       </div>
-      </Layout>
+      
     );
   }
 
