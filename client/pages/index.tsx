@@ -97,7 +97,7 @@ const Index = () => {
             levels.map((level) => (
               <div 
                 key={level.order} 
-                className={`relative rounded-lg mb-2 shadow-inner overflow-hidden ${level.availability ? 'bg-neutral-content' : 'bg-black'}`
+                className={`relative rounded-lg mb-2 shadow-inner overflow-hidden ${level.availability ? 'bg-neutral-content' : 'bg-base-100'}`
               }>
                 {level.availability ? (
                   <>
