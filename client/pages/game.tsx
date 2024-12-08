@@ -28,12 +28,16 @@ const GamePage: React.FC = () => {
     const loadImages = async () => {
       const images: Record<string, HTMLImageElement> = {};
       for (const mineral of minerals) {
-        const img = new Image();
-        img.src = mineral.image;
-        await new Promise((resolve) => {
-          img.onload = () => resolve(null);
-        });
-        images[mineral.image] = img;
+        if (!images[mineral.image]) {
+          const img = new Image();
+          img.src = mineral.image;
+          await new Promise((resolve, reject) => {
+            img.onload = () => resolve(null);
+            img.onerror = () => reject(`Failed to load ${mineral.image}`);
+          });
+          console.log(`Loaded image: ${mineral.image}`);
+          images[mineral.image] = img;
+        }
       }
       setPreloadedImages(images);
     };
@@ -65,6 +69,7 @@ const GamePage: React.FC = () => {
       // Draw minerals
       minerals.forEach((mineral) => {
         const img = preloadedImages[mineral.image];
+
         if (img) {
           context.save();
           context.translate(mineral.x, mineral.y);
@@ -77,6 +82,14 @@ const GamePage: React.FC = () => {
             mineral.radius * 2
           );
           context.restore();
+        } else {
+          // Placeholder shape if image is not loaded
+          console.warn(`Image not loaded: ${mineral.image}`);
+          context.beginPath();
+          context.arc(mineral.x, mineral.y, mineral.radius, 0, Math.PI * 2);
+          context.fillStyle = "red";
+          context.fill();
+          context.closePath();
         }
       });
 
