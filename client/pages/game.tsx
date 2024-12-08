@@ -54,38 +54,52 @@ const GamePage: React.FC = () => {
 
   useEffect(() => {
     if (!context) return;
-  
+
     const draw = () => {
       const canvas = canvasRef.current!;
       const { width, height } = canvas;
-  
+
       // Clear canvas
       context.clearRect(0, 0, width, height);
-  
-      // Debug background
-      context.fillStyle = "blue"; // Debugging color
+
+      // Draw background
+      context.fillStyle = "#1e1e1e"; // Dark grey background
       context.fillRect(0, 0, width, height);
-  
-      // Debug minerals
+
+      // Draw minerals
       minerals.forEach((mineral) => {
-        console.log(`Drawing mineral at x=${mineral.x}, y=${mineral.y}`);
-  
-        // Draw placeholder circles instead of images
-        context.beginPath();
-        context.arc(mineral.x, mineral.y, mineral.radius, 0, Math.PI * 2);
-        context.fillStyle = "red"; // Debugging color
-        context.fill();
-        context.closePath();
+        const img = preloadedImages[mineral.image];
+
+        if (img) {
+          context.save();
+          context.translate(mineral.x, mineral.y);
+          context.rotate((mineral.rotation * Math.PI) / 180);
+          context.drawImage(
+            img,
+            -mineral.radius,
+            -mineral.radius,
+            mineral.radius * 2,
+            mineral.radius * 2
+          );
+          context.restore();
+        } else {
+          // Placeholder shape if image is not loaded
+          console.warn(`Image not loaded: ${mineral.image}`);
+          context.beginPath();
+          context.arc(mineral.x, mineral.y, mineral.radius, 0, Math.PI * 2);
+          context.fillStyle = "red";
+          context.fill();
+          context.closePath();
+        }
       });
-  
+
       if (!isGameOver) {
         requestAnimationFrame(draw);
       }
     };
-  
+
     draw();
-  }, [context, minerals, isGameOver]);
-  
+  }, [context, minerals, isGameOver, preloadedImages]);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const rect = canvasRef.current!.getBoundingClientRect();
