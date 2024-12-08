@@ -1,12 +1,15 @@
-import React, { useRef, useEffect, useState } from "react";
-import { usePreloadAssets } from "../hooks/usePreloadAssets";
-import { useGameLogic } from "../hooks/useGameLogic";
+// pages/game.tsx
 
-import GameHUD from "../components/game/GameHUD";
-import GameOverModal from "../components/game/GameOverModal";
+import React, { useCallback } from 'react';
+import { usePreloadAssets } from '../hooks/usePreloadAssets';
+import { useGameLogic } from '../hooks/useGameLogic';
+
+import BackgroundVideo from '../components/game/BackgroundVideo';
+import GameHUD from '../components/game/GameHUD';
+import CanvasGame from '../components/game/CanvasGame';
+import GameOverModal from '../components/game/GameOverModal';
 
 const GamePage: React.FC = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const isLoading = usePreloadAssets();
   const {
     minerals,
@@ -16,90 +19,26 @@ const GamePage: React.FC = () => {
     totalCollectedValue,
     collectedMinerals,
     handleMineralClick,
-    goToMainMenu,
+    goToMainMenu
   } = useGameLogic();
 
-  const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
+  const handleCanvasClick = useCallback(
+    (event: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
+      const canvas = event.currentTarget;
+      const rect = canvas.getBoundingClientRect();
+      const clickX = event.clientX - rect.left;
+      const clickY = event.clientY - rect.top;
 
-  // Preload images for minerals
-  const [preloadedImages, setPreloadedImages] = useState<Record<string, HTMLImageElement>>({});
-
-  useEffect(() => {
-    const loadImages = async () => {
-      const images: Record<string, HTMLImageElement> = {};
-      for (const mineral of minerals) {
-        if (!images[mineral.image]) {
-          const img = new Image();
-          img.src = mineral.image;
-          await new Promise((resolve, reject) => {
-            img.onload = () => resolve(null);
-            img.onerror = () => reject(`Failed to load ${mineral.image}`);
-          });
-          console.log(`Loaded image: ${mineral.image}`);
-          images[mineral.image] = img;
-        }
-      }
-      setPreloadedImages(images);
-    };
-
-    loadImages();
-  }, [minerals]);
-
-  useEffect(() => {
-    if (canvasRef.current) {
-      const ctx = canvasRef.current.getContext("2d");
-      setContext(ctx);
-    }
-  }, [canvasRef]);
-
-  useEffect(() => {
-    if (!context) return;
-  
-    const draw = () => {
-      const canvas = canvasRef.current!;
-      const { width, height } = canvas;
-  
-      // Clear canvas
-      context.clearRect(0, 0, width, height);
-  
-      // Debug background
-      context.fillStyle = "blue"; // Debugging color
-      context.fillRect(0, 0, width, height);
-  
-      // Debug minerals
+      // Find if a mineral was clicked
       minerals.forEach((mineral) => {
-        console.log(`Drawing mineral at x=${mineral.x}, y=${mineral.y}`);
-  
-        // Draw placeholder circles instead of images
-        context.beginPath();
-        context.arc(mineral.x, mineral.y, mineral.radius, 0, Math.PI * 2);
-        context.fillStyle = "red"; // Debugging color
-        context.fill();
-        context.closePath();
+        const distance = Math.hypot(mineral.x - clickX, mineral.y - clickY);
+        if (distance < mineral.radius) {
+          handleMineralClick(mineral.id, mineral.value, mineral.image);
+        }
       });
-  
-      if (!isGameOver) {
-        requestAnimationFrame(draw);
-      }
-    };
-  
-    draw();
-  }, [context, minerals, isGameOver]);
-  
-
-  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const rect = canvasRef.current!.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    minerals.forEach((mineral) => {
-      const dx = x - mineral.x;
-      const dy = y - mineral.y;
-      if (Math.sqrt(dx * dx + dy * dy) <= mineral.radius) {
-        handleMineralClick(mineral.id, mineral.value, mineral.image);
-      }
-    });
-  };
+    },
+    [minerals, handleMineralClick]
+  );
 
   if (isLoading) {
     return (
@@ -110,20 +49,17 @@ const GamePage: React.FC = () => {
   }
 
   return (
-    <div className="relative w-full h-full">
-      {/* Canvas for Game Rendering */}
-      <canvas
-        ref={canvasRef}
-        width={window.innerWidth}
-        height={window.innerHeight}
-        onClick={handleCanvasClick}
-        className="absolute inset-0"
+    <div className="card bg-neutral text-white overflow-hidden fixed inset-0 w-full h-full select-none touch-none">
+      <BackgroundVideo src="/game/bg/123.mp4" />
+      <CanvasGame
+        minerals={minerals}
+        handleMineralClick={handleMineralClick}
+        isGameOver={isGameOver}
+        onClick={handleCanvasClick} // Pass the click handler here
       />
-
-      {/* Reusing GameHUD for Score, Time, and Boosts */}
-      <GameHUD score={score} timeLeft={timeLeft} />
-
-      {/* Game Over Modal */}
+      <div className="relative z-10 w-full h-full bg-base-100 bg-opacity-50 overflow-hidden p-3 box-border">
+        <GameHUD score={score} timeLeft={timeLeft} />
+      </div>
       {isGameOver && (
         <GameOverModal
           totalCollectedValue={totalCollectedValue}

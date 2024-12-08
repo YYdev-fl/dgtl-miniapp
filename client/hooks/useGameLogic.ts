@@ -6,7 +6,7 @@ import { Mineral } from '../models/Mineral';
 
 export function useGameLogic() {
   const router = useRouter();
-  
+
   const [minerals, setMinerals] = useState<Mineral[]>([]);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(10);
@@ -49,11 +49,7 @@ export function useGameLogic() {
     }
   }, [isGameOver]);
 
-  const updateMinerals = useCallback((timestamp: number) => {
-    if (!lastTimeRef.current) lastTimeRef.current = timestamp;
-    const deltaTime = (timestamp - lastTimeRef.current) / 1000;
-    lastTimeRef.current = timestamp;
-
+  const updateMinerals = useCallback((deltaTime: number) => {
     setMinerals((prev) =>
       prev
         .map((m) => ({
@@ -64,24 +60,10 @@ export function useGameLogic() {
         .filter((m) => m.y - m.radius < window.innerHeight)
     );
 
-    if (!isGameOver) {
-      animationFrameRef.current = requestAnimationFrame(updateMinerals);
-    }
-  }, [isGameOver]);
+    // Check for game over condition if needed
+  }, []);
 
   useEffect(() => {
-  if (!isGameOver) {
-    animationFrameRef.current = requestAnimationFrame(updateMinerals);
-  }
-  // Cleanup: if there's an animation frame, cancel it, otherwise do nothing
-  return () => {
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
-  };
-}, [isGameOver, updateMinerals]);
-
-useEffect(() => {
     mineralIntervalRef.current = setInterval(addMineral, 300);
     return () => {
       if (mineralIntervalRef.current) {
@@ -89,22 +71,44 @@ useEffect(() => {
       }
     };
   }, [addMineral]);
-  
+
   useEffect(() => {
     if (timeLeft > 0 && !isGameOver) {
       const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
-      // Always return a cleanup function that does not return null.
       return () => {
         clearInterval(timer);
       };
     } else if (timeLeft === 0) {
       setIsGameOver(true);
       if (mineralIntervalRef.current) clearInterval(mineralIntervalRef.current);
-      // No return here means no cleanup needed in this branch.
     }
-    // If neither condition applies, no return is needed.
   }, [timeLeft, isGameOver]);
-  
+
+  // Handle game loop
+  useEffect(() => {
+    if (isGameOver) return;
+
+    let lastTimestamp = performance.now();
+
+    const gameLoop = (timestamp: number) => {
+      const deltaTime = (timestamp - lastTimestamp) / 1000;
+      lastTimestamp = timestamp;
+
+      updateMinerals(deltaTime);
+
+      if (!isGameOver) {
+        animationFrameRef.current = requestAnimationFrame(gameLoop);
+      }
+    };
+
+    animationFrameRef.current = requestAnimationFrame(gameLoop);
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [isGameOver, updateMinerals]);
 
   const handleMineralClick = useCallback((id: number, value: number, image: string) => {
     if (window.Telegram?.WebApp?.hapticFeedback) {
