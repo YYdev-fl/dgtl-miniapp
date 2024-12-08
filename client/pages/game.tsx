@@ -21,6 +21,26 @@ const GamePage: React.FC = () => {
 
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
 
+  // Preload images for minerals
+  const [preloadedImages, setPreloadedImages] = useState<Record<string, HTMLImageElement>>({});
+
+  useEffect(() => {
+    const loadImages = async () => {
+      const images: Record<string, HTMLImageElement> = {};
+      for (const mineral of minerals) {
+        const img = new Image();
+        img.src = mineral.image;
+        await new Promise((resolve) => {
+          img.onload = () => resolve(null);
+        });
+        images[mineral.image] = img;
+      }
+      setPreloadedImages(images);
+    };
+
+    loadImages();
+  }, [minerals]);
+
   useEffect(() => {
     if (canvasRef.current) {
       const ctx = canvasRef.current.getContext("2d");
@@ -32,18 +52,20 @@ const GamePage: React.FC = () => {
     if (!context) return;
 
     const draw = () => {
+      const canvas = canvasRef.current!;
+      const { width, height } = canvas;
+
       // Clear canvas
-      context.clearRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
+      context.clearRect(0, 0, width, height);
 
       // Draw background
-      context.fillStyle = "black";
-      context.fillRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);
+      context.fillStyle = "#1e1e1e"; // Dark grey background
+      context.fillRect(0, 0, width, height);
 
       // Draw minerals
       minerals.forEach((mineral) => {
-        const img = new Image();
-        img.src = mineral.image;
-        img.onload = () => {
+        const img = preloadedImages[mineral.image];
+        if (img) {
           context.save();
           context.translate(mineral.x, mineral.y);
           context.rotate((mineral.rotation * Math.PI) / 180);
@@ -55,7 +77,7 @@ const GamePage: React.FC = () => {
             mineral.radius * 2
           );
           context.restore();
-        };
+        }
       });
 
       if (!isGameOver) {
@@ -64,7 +86,7 @@ const GamePage: React.FC = () => {
     };
 
     draw();
-  }, [context, minerals, isGameOver]);
+  }, [context, minerals, isGameOver, preloadedImages]);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const rect = canvasRef.current!.getBoundingClientRect();
