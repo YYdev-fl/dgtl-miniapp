@@ -1,45 +1,43 @@
-import React from 'react';
-import { usePreloadAssets } from '../hooks/usePreloadAssets';
-import { useGameLogic } from '../hooks/useGameLogic';
-
-import BackgroundVideo from '../components/game/BackgroundVideo';
+import React, { useState, useCallback } from 'react';
 import GameHUD from '../components/game/GameHUD';
-import MineralsDisplay from '../components/game/MineralsDisplay';
 import GameOverModal from '../components/game/GameOverModal';
+import GameCanvas from '../components/game/GameCanvas';
 
 const GamePage: React.FC = () => {
-  const isLoading = usePreloadAssets();
-  const {
-    minerals,
-    score,
-    timeLeft,
-    isGameOver,
-    totalCollectedValue,
-    collectedMinerals,
-    handleMineralClick,
-    goToMainMenu
-  } = useGameLogic();
+  const [score, setScore] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [isGameOver, setIsGameOver] = useState(false);
+  const [collectedMinerals, setCollectedMinerals] = useState<Record<string, { count: number; value: number }>>({});
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen w-screen bg-base-100">
-        <div className="loading loading-spinner loading-lg mb-4"></div>
-      </div>
-    );
-  }
+  const handleMineralClick = useCallback((id: number, value: number, image: string) => {
+    setScore((prevScore) => prevScore + value);
+    setCollectedMinerals((prev) => ({
+      ...prev,
+      [image]: {
+        count: (prev[image]?.count || 0) + 1,
+        value,
+      },
+    }));
+  }, []);
+
+  const handleGoToMainMenu = () => {
+    // Logic to navigate to the main menu
+  };
 
   return (
-    <div className="card bg-neutral text-white overflow-hidden fixed inset-0 w-full h-full select-none touch-none">
-      <BackgroundVideo src="/game/bg/123.mp4" />
-      <div className="relative z-10 w-full h-full bg-base-100 bg-opacity-50 overflow-hidden p-3 box-border">
-        <GameHUD score={score} timeLeft={timeLeft} />
-        <MineralsDisplay minerals={minerals} onMineralClick={handleMineralClick} />
-      </div>
+    <div className="relative w-screen h-screen">
+      <GameCanvas
+        onMineralClick={handleMineralClick}
+        isGameOver={isGameOver}
+        setIsGameOver={setIsGameOver}
+        setCollectedMinerals={setCollectedMinerals}
+      />
+      <GameHUD score={score} timeLeft={timeLeft} />
       {isGameOver && (
         <GameOverModal
-          totalCollectedValue={totalCollectedValue}
+          totalCollectedValue={score}
           collectedMinerals={collectedMinerals}
-          onGoToMainMenu={goToMainMenu}
+          onGoToMainMenu={handleGoToMainMenu}
         />
       )}
     </div>
