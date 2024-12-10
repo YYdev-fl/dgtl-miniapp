@@ -5,14 +5,13 @@ const GamePage: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
+
+    document.body.style.overflow = "hidden";
+
     const canvas = canvasRef.current;
 
     if (canvas) {
-      // Initialize the Game instance
-      const preventDefault = (e: TouchEvent | MouseEvent) => e.preventDefault();
-      canvas.addEventListener("touchstart", preventDefault, { passive: false });
-      canvas.addEventListener("touchmove", preventDefault, { passive: false });
-
+      
 
       const game = new Game(canvas);
       game.startGame();
@@ -31,8 +30,11 @@ const GamePage: React.FC = () => {
   }, []);
 
   return (
-    <div style={{ width: "100%", height: "100vh", overflow: "hidden" }}>
-      <canvas ref={canvasRef} style={{ display: "block", width: "100%", height: "100%" }}></canvas>
+    <div className="w-full h-screen overflow-hidden touch-none">
+      <canvas
+        ref={canvasRef}
+        className="block w-full h-full"
+      ></canvas>
     </div>
   );
 };
