@@ -8,10 +8,12 @@ const GamePage: React.FC = () => {
         const canvas = canvasRef.current;
 
         if (canvas) {
+            // Initialize and start the game
             const game = new Game(canvas);
             game.startGame();
         }
 
+        // Cleanup function to clear canvas on unmount
         return () => {
             const context = canvasRef.current?.getContext("2d");
             if (context) context.clearRect(0, 0, canvas!.width, canvas!.height);
