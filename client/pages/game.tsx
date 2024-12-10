@@ -9,6 +9,11 @@ const GamePage: React.FC = () => {
 
     if (canvas) {
       // Initialize the Game instance
+      const preventDefault = (e: TouchEvent | MouseEvent) => e.preventDefault();
+      canvas.addEventListener("touchstart", preventDefault, { passive: false });
+      canvas.addEventListener("touchmove", preventDefault, { passive: false });
+
+
       const game = new Game(canvas);
       game.startGame();
     }
