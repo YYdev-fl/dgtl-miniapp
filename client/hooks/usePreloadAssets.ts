@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { mineralsData } from '../constants/gameData';
+import { MINERALS } from '../game/constants/gameData';
 import { preloadImage } from '../lib/preloadImage';
 import { preloadVideo } from '../lib/preloadVideo';
 
@@ -9,7 +9,7 @@ export function usePreloadAssets() {
   useEffect(() => {
     async function loadAssets() {
       try {
-        const imagePromises = mineralsData.map((m) => preloadImage(m.image));
+        const imagePromises = MINERALS.map((m) => preloadImage(m.src));
         await Promise.all([
           ...imagePromises,
           preloadVideo("/game/bg/123.mp4")

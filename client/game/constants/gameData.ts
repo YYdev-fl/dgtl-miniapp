@@ -1,0 +1,8 @@
+export const GAME_DURATION = 20; 
+export const SPAWN_INTERVAL = 100; 
+export const MINERALS = [
+    { src: "/minerals/1.png", points: 1 },
+    { src: "/minerals/2.png", points: 2 },
+    { src: "/minerals/3.png", points: 3 },
+    { src: "/minerals/4.png", points: 4 },
+];
