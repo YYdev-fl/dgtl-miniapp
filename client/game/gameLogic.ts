@@ -12,6 +12,8 @@ export class Game {
     gameTime: number = GAME_DURATION;
     spawnTimer: NodeJS.Timeout | null = null;
     gameTimer: NodeJS.Timeout | null = null;
+    lastUpdateTime: number = performance.now();
+    targetFPS: number = 30; // Adjust for mobile performance
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
@@ -30,7 +32,7 @@ export class Game {
     }
 
     setupEventListeners() {
-        this.canvas.addEventListener("mousedown", (event) => {
+        this.canvas.addEventListener("pointerdown", (event) => {
             const rect = this.canvas.getBoundingClientRect();
             const mouseX = event.clientX - rect.left;
             const mouseY = event.clientY - rect.top;
@@ -47,21 +49,37 @@ export class Game {
 
     spawnEntity() {
         const randomX = Math.random() * (this.windowWidth - 50);
-        const randomSpeed = Math.random() * 3 + 1;
+        const randomSpeed = Math.random() * 2 + 1; // Adjust speed for smoother rendering
         const mineral = getRandomMineral(MINERALS);
         const entity = new ImageEntity(randomX, -50, mineral.src, randomSpeed, mineral.points);
         this.entities.push(entity);
     }
 
     updateEntities() {
+        const now = performance.now();
+        const delta = now - this.lastUpdateTime;
+        this.lastUpdateTime = now;
+
+        // Throttle to target FPS
+        if (delta < 1000 / this.targetFPS) {
+            requestAnimationFrame(() => this.updateEntities());
+            return;
+        }
+
+        // Clear canvas
         this.context.clearRect(0, 0, this.windowWidth, this.windowHeight);
 
+        // Update and render entities
         this.entities.forEach((entity) => entity.update(this.context));
+
+        // Remove off-screen entities
         this.entities = this.entities.filter((entity) => !entity.isOffScreen(this.windowHeight));
 
+        // Render UI
         this.renderScore();
         this.renderTimer();
 
+        // End game if time runs out
         if (this.gameTime <= 0) {
             this.endGame();
         } else {

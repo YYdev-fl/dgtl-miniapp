@@ -6,7 +6,6 @@ export class ImageEntity {
     width: number = 50;
     height: number = 50;
     points: number;
-    dy: number;
     rotation: number = 0;
     rotationSpeed: number;
 
@@ -17,7 +16,6 @@ export class ImageEntity {
         this.image.src = imageSrc;
         this.speed = speed;
         this.points = points;
-        this.dy = speed;
         this.rotationSpeed = Math.random() * 0.1 + 0.02;
     }
 
@@ -31,11 +29,11 @@ export class ImageEntity {
 
     update(context: CanvasRenderingContext2D) {
         this.rotation += this.rotationSpeed;
-        this.ypos += this.dy;
+        this.ypos += this.speed;
         this.draw(context);
     }
 
-    isOffScreen(windowHeight: number) {
+    isOffScreen(windowHeight: number): boolean {
         return this.ypos > windowHeight;
     }
 
