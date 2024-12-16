@@ -34,7 +34,6 @@ export class ImageEntity {
         this.ypos += this.speed * deltaTime; 
         this.draw(context);
     }
-    
 
     isOffScreen(windowHeight: number): boolean {
         return this.ypos > windowHeight;
@@ -44,7 +43,7 @@ export class ImageEntity {
         const centerX = this.xpos + this.width / 2;
         const centerY = this.ypos + this.height / 2;
         const radius = Math.max(this.width, this.height) / 2 + 10;
-        const distance = Math.sqrt(Math.pow(mouseX - centerX, 2) + Math.pow(mouseY - centerY, 2));
+        const distance = Math.sqrt((mouseX - centerX) ** 2 + (mouseY - centerY) ** 2);
         return distance <= radius;
     }
 }
