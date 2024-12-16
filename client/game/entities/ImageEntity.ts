@@ -27,11 +27,12 @@ export class ImageEntity {
         context.restore();
     }
 
-    update(context: CanvasRenderingContext2D) {
-        this.rotation += this.rotationSpeed;
-        this.ypos += this.speed;
+    update(context: CanvasRenderingContext2D, deltaTime: number) {
+        this.rotation += this.rotationSpeed * deltaTime; 
+        this.ypos += this.speed * deltaTime; 
         this.draw(context);
     }
+    
 
     isOffScreen(windowHeight: number): boolean {
         return this.ypos > windowHeight;

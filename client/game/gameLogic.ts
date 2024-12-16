@@ -12,6 +12,7 @@ export class Game {
     gameTime: number = GAME_DURATION;
     spawnTimer: NodeJS.Timeout | null = null;
     gameTimer: NodeJS.Timeout | null = null;
+    lastUpdateTime: number = 0;
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
@@ -54,19 +55,22 @@ export class Game {
         this.entities.push(entity);
     }
 
-    updateEntities() {
+    updateEntities(currentTime: number = 0) {
+        const deltaTime = (currentTime - this.lastUpdateTime) / 1000; // Convert to seconds
+        this.lastUpdateTime = currentTime;
+    
         this.context.clearRect(0, 0, this.windowWidth, this.windowHeight);
-
-        this.entities.forEach((entity) => entity.update(this.context));
+    
+        this.entities.forEach((entity) => entity.update(this.context, deltaTime));
         this.entities = this.entities.filter((entity) => !entity.isOffScreen(this.windowHeight));
-
+    
         this.renderScore();
         this.renderTimer();
-
+    
         if (this.gameTime <= 0) {
             this.endGame();
         } else {
-            requestAnimationFrame(() => this.updateEntities());
+            requestAnimationFrame((time) => this.updateEntities(time));
         }
     }
 
