@@ -1,3 +1,5 @@
+import { MIN_ROTATION_SPEED, MAX_ROTATION_SPEED } from "../constants/gameData";
+
 export class ImageEntity {
     xpos: number;
     ypos: number;
@@ -16,7 +18,7 @@ export class ImageEntity {
         this.image.src = imageSrc;
         this.speed = speed;
         this.points = points;
-        this.rotationSpeed = Math.random() * 0.1 + 0.02;
+        this.rotationSpeed = Math.random() * (MAX_ROTATION_SPEED - MIN_ROTATION_SPEED) + MIN_ROTATION_SPEED;
     }
 
     draw(context: CanvasRenderingContext2D) {
