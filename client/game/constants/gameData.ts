@@ -5,8 +5,8 @@ export const BASE_HEIGHT = 1080;
 export const MIN_SPEED = 100;
 export const MAX_SPEED = 200;
 
-export const MIN_ROTATION_SPEED = 0.5;
-export const MAX_ROTATION_SPEED = 1;
+export const MIN_ROTATION_SPEED = 1;
+export const MAX_ROTATION_SPEED = 3;
 
 export const MINERALS = [
     { src: "/minerals/1.png", points: 1 },
