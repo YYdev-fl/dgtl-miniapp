@@ -85,6 +85,7 @@ export class Game {
     }
 
     startGame() {
+        this.lastUpdateTime = performance.now(); 
         this.spawnTimer = setInterval(() => this.spawnEntity(), SPAWN_INTERVAL);
         this.gameTimer = setInterval(() => {
             this.gameTime -= 1;
@@ -93,10 +94,10 @@ export class Game {
                 clearInterval(this.gameTimer!);
             }
         }, 1000);
-
-        this.updateEntities();
+    
+        this.updateEntities(this.lastUpdateTime);
     }
-
+    
     endGame() {
         this.context.clearRect(0, 0, this.windowWidth, this.windowHeight);
         this.context.fillStyle = "#fff";
