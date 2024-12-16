@@ -31,14 +31,10 @@ export class Game {
     }
 
     setupEventListeners() {
-        this.canvas.addEventListener("touchstart", (event: TouchEvent) => {
+        this.canvas.addEventListener("pointerdown", (event: PointerEvent) => {
             const rect = this.canvas.getBoundingClientRect();
-            const touch = event.touches[0]; // Access the first touch point
-    
-            // Convert touch coordinates to canvas coordinates.
-            // If your canvas is scaled, you may need additional scaling:
-            const mouseX = (touch.clientX - rect.left) * (this.canvas.width / rect.width);
-            const mouseY = (touch.clientY - rect.top) * (this.canvas.height / rect.height);
+            const mouseX = (event.clientX - rect.left) * (this.canvas.width / rect.width);
+            const mouseY = (event.clientY - rect.top) * (this.canvas.height / rect.height);
     
             for (let i = this.entities.length - 1; i >= 0; i--) {
                 if (this.entities[i].isClicked(mouseX, mouseY)) {
@@ -49,6 +45,7 @@ export class Game {
             }
         });
     }
+    
     
 
     spawnEntity() {
