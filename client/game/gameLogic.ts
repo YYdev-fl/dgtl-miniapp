@@ -1,5 +1,5 @@
 import { ImageEntity } from "./entities/ImageEntity";
-import { MINERALS, GAME_DURATION, SPAWN_INTERVAL, BASE_HEIGHT } from "./constants/gameData";
+import { MINERALS, GAME_DURATION, SPAWN_INTERVAL, BASE_HEIGHT, MIN_SPEED, MAX_SPEED } from "./constants/gameData";
 import { getRandomMineral } from "./utils/helper";
 
 export class Game {
@@ -49,7 +49,7 @@ export class Game {
     spawnEntity() {
         const randomX = Math.random() * (this.windowWidth - 50);
         const speedFactor = this.windowHeight / BASE_HEIGHT; 
-        const randomSpeed = (Math.random() * 3 + 1) * speedFactor; 
+        const randomSpeed = (Math.random() * (MAX_SPEED - MIN_SPEED) + MIN_SPEED) * speedFactor; 
         const mineral = getRandomMineral(MINERALS);
         const entity = new ImageEntity(randomX, -50, mineral.src, randomSpeed, mineral.points);
         this.entities.push(entity);
