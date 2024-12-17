@@ -164,39 +164,51 @@ export class Game {
         }
       }
       
-      applySpeedBoost() {
-        // Clear the current spawn timer if any
+    applySpeedBoost() {
+    // Clear the current spawn timer if any
+    if (this.spawnTimer) {
+        clearInterval(this.spawnTimer);
+    }
+    
+    // Spawn twice as fast for 5 seconds
+    const fastSpawnInterval = SPAWN_INTERVAL / 2;
+    this.spawnTimer = setInterval(() => this.spawnEntity(), fastSpawnInterval);
+    
+    // After 5 seconds, revert to normal
+    setTimeout(() => {
         if (this.spawnTimer) {
-          clearInterval(this.spawnTimer);
+        clearInterval(this.spawnTimer);
         }
+        this.spawnTimer = setInterval(() => this.spawnEntity(), SPAWN_INTERVAL);
+    }, 5000);
+    }
       
-        // Spawn twice as fast for 5 seconds
-        const fastSpawnInterval = SPAWN_INTERVAL / 2;
-        this.spawnTimer = setInterval(() => this.spawnEntity(), fastSpawnInterval);
-      
-        // After 5 seconds, revert to normal
-        setTimeout(() => {
-          if (this.spawnTimer) {
-            clearInterval(this.spawnTimer);
-          }
-          this.spawnTimer = setInterval(() => this.spawnEntity(), SPAWN_INTERVAL);
-        }, 5000);
-      }
-      
-      applyDynamite() {
-        // Collect all visible minerals
-        let addedScore = 0;
-        for (const entity of this.entities) {
-          addedScore += entity.points;
+    private applyDynamite() {
+    let addedScore = 0;
+    
+    // For each entity, add its points to score and update collectedMinerals
+    for (const entity of this.entities) {
+        addedScore += entity.points;
+    
+        const imgSrc = entity.image.src;
+        if (!this.collectedMinerals[imgSrc]) {
+        // If this mineral type isn't recorded yet, initialize it
+        this.collectedMinerals[imgSrc] = { count: 0, value: entity.points };
         }
-        this.entities = []; // remove them from the screen
-        this.score += addedScore;
-      
-        // Notify score update
-        if (this.onScoreUpdate) {
-          this.onScoreUpdate(this.score);
-        }
-      
-        // No timer needed, effect is immediate
-      }
+    
+        // Increase the count for this mineral
+        this.collectedMinerals[imgSrc].count += 1;
+    }
+    
+    // Clear all entities from the screen
+    this.entities = [];
+    
+    // Increase the score
+    this.score += addedScore;
+    
+    // Notify the HUD about the updated score
+    if (this.onScoreUpdate) {
+        this.onScoreUpdate(this.score);
+    }
+    }
 }
