@@ -45,7 +45,7 @@ const GamePage: React.FC = () => {
     }, []);
 
     const handleGoToMainMenu = () => {
-        router.push("/index.tsx");
+        router.push("/");
     };
 
     return (
