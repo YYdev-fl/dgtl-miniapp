@@ -27,7 +27,7 @@ const GamePage: React.FC = () => {
                     setGameOver(true);
                     // Update coins in DB
                     try {
-                        await axios.post("/api/updatecoins", { amount: collectedValue });
+                        await axios.post("/api/updateCoins", { amount: collectedValue });
                     } catch (error) {
                         console.error("Failed to update coins:", error);
                     }
