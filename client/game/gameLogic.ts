@@ -154,10 +154,10 @@ export class Game {
 
     useBoost(boostId: string) {
         switch (boostId) {
-          case 'speed':
+          case 'boost1':
             this.applySpeedBoost();
             break;
-          case 'dynamite':
+          case 'boost2':
             this.applyDynamite();
             break;
           // Add cases for other boosts
