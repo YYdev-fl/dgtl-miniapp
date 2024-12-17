@@ -2,9 +2,17 @@ import { ImageEntity } from "./entities/ImageEntity";
 import { MINERALS, GAME_DURATION, SPAWN_INTERVAL, BASE_HEIGHT, MIN_SPEED, MAX_SPEED } from "./constants/gameData";
 import { getRandomMineral } from "./utils/helper";
 
+interface CollectedMinerals {
+    [imageSrc: string]: {
+        count: number;
+        value: number; 
+    }
+}
+
 interface GameCallbacks {
     onScoreUpdate?: (score: number) => void;
     onTimeLeftUpdate?: (timeLeft: number) => void;
+    onGameOver?: (totalCollectedValue: number, collectedMinerals: CollectedMinerals) => void;
 }
 
 export class Game {
@@ -21,8 +29,12 @@ export class Game {
     gameTimer: NodeJS.Timeout | null = null;
     lastUpdateTime: number = 0;
 
+    // Track collected minerals
+    collectedMinerals: CollectedMinerals = {};
+
     onScoreUpdate?: (score: number) => void;
     onTimeLeftUpdate?: (timeLeft: number) => void;
+    onGameOver?: (totalCollectedValue: number, collectedMinerals: CollectedMinerals) => void;
 
     constructor(canvas: HTMLCanvasElement, callbacks: GameCallbacks = {}) {
         this.canvas = canvas;
@@ -32,6 +44,7 @@ export class Game {
 
         this.onScoreUpdate = callbacks.onScoreUpdate;
         this.onTimeLeftUpdate = callbacks.onTimeLeftUpdate;
+        this.onGameOver = callbacks.onGameOver;
 
         // Create offscreen canvas
         this.offscreenCanvas = document.createElement("canvas");
@@ -58,7 +71,15 @@ export class Game {
             // Check top-most entity
             for (let i = this.entities.length - 1; i >= 0; i--) {
                 if (this.entities[i].isClicked(mouseX, mouseY)) {
-                    this.score += this.entities[i].points;
+                    const entity = this.entities[i];
+                    this.score += entity.points;
+                    // Track collected minerals
+                    const imgSrc = entity.image.src;
+                    if (!this.collectedMinerals[imgSrc]) {
+                        this.collectedMinerals[imgSrc] = { count: 0, value: entity.points };
+                    }
+                    this.collectedMinerals[imgSrc].count += 1;
+
                     this.entities.splice(i, 1);
 
                     // Call score update callback
@@ -118,15 +139,16 @@ export class Game {
     }
 
     endGame() {
-        // Clear offscreen and main canvases
-        this.offscreenContext.clearRect(0, 0, this.windowWidth, this.windowHeight);
-        this.context.clearRect(0, 0, this.windowWidth, this.windowHeight);
+        // Calculate total collected value
+        let totalValue = 0;
+        for (const mineralKey in this.collectedMinerals) {
+            const { count, value } = this.collectedMinerals[mineralKey];
+            totalValue += count * value;
+        }
 
-        this.offscreenContext.fillStyle = "#fff";
-        this.offscreenContext.font = "30px Arial";
-        this.offscreenContext.textAlign = "center";
-        this.offscreenContext.fillText(`Game Over! Final Score: ${this.score}`, this.windowWidth / 2, this.windowHeight / 2);
-
-        this.context.drawImage(this.offscreenCanvas, 0, 0);
+        // Notify via callback that the game ended
+        if (this.onGameOver) {
+            this.onGameOver(totalValue, this.collectedMinerals);
+        }
     }
 }
