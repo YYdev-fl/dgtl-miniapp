@@ -30,6 +30,7 @@ const GamePage: React.FC = () => {
   const [boostCards, setBoostCards] = useState<IBoostCard[]>([]);
   const [userBoosts, setUserBoosts] = useState<IUserBoosts>({});
 
+  const [cooldowns, setCooldowns] = useState<{ [key: string]: number | null }>({});
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [isImagesLoading, setIsImagesLoading] = useState(true);
 
@@ -100,22 +101,43 @@ const GamePage: React.FC = () => {
   }, [isDataLoading, isImagesLoading]);
 
   const handleBoostClick = (boostId: string) => {
-    const currentQuantity = userBoosts[boostId] || 0;
-    if (currentQuantity > 0) {
-      // Decrement the boost from user's inventory
-      setUserBoosts((prev) => ({
-        ...prev,
-        [boostId]: prev[boostId] - 1,
-      }));
+  const currentQuantity = userBoosts[boostId] || 0;
 
-      // Apply effect in the game
-      if (gameRef.current) {
-        gameRef.current.useBoost(boostId);
-      }
-    } else {
-      console.log("No boost of this type available.");
+  if (cooldowns[boostId]) {
+    console.log(`Boost ${boostId} is on cooldown.`);
+    return; // Restrict clicking during cooldown
+  }
+
+  if (currentQuantity > 0) {
+    // Decrement the boost from user's inventory
+    setUserBoosts((prev) => ({
+      ...prev,
+      [boostId]: prev[boostId] - 1,
+    }));
+
+    // Apply effect in the game
+    if (gameRef.current) {
+      gameRef.current.useBoost(boostId);
     }
-  };
+
+    // Start cooldown timer (3 seconds)
+    setCooldowns((prev) => ({ ...prev, [boostId]: 3 }));
+
+    const cooldownInterval = setInterval(() => {
+      setCooldowns((prev) => {
+        if (!prev[boostId]) return prev; // Exit if already cleared
+        const newTime = prev[boostId]! - 1;
+        if (newTime <= 0) {
+          clearInterval(cooldownInterval);
+          return { ...prev, [boostId]: null }; // Clear cooldown
+        }
+        return { ...prev, [boostId]: newTime };
+      });
+    }, 1000);
+  } else {
+    console.log("No boost of this type available.");
+  }
+};
 
   const handleGoToMainMenu = () => {
     window.location.href = "/";
@@ -143,11 +165,12 @@ const GamePage: React.FC = () => {
 
       {!isLoading && !gameOver && (
         <GameHUD
-          score={score}
-          timeLeft={timeLeft}
-          boostCards={activeBoosts}
-          onBoostClick={handleBoostClick}
-        />
+        score={score}
+        timeLeft={timeLeft}
+        boostCards={activeBoosts}
+        onBoostClick={handleBoostClick}
+        cooldowns={cooldowns}
+      />
       )}
 
       {gameOver && (
