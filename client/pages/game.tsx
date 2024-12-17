@@ -1,66 +1,145 @@
 import { useEffect, useRef, useState } from "react";
 import { Game } from "../game/gameLogic";
 import GameHUD from "../components/game/GameHUD";
-import GameOverModal from "../components/game/GameOverModal"; 
-import { GAME_DURATION } from "../game/constants/gameData";
+import GameOverModal from "../components/game/GameOverModal";
+import { GAME_DURATION, MINERALS } from "../game/constants/gameData";
 import axios from "axios";
-import router from "next/router";
+import { useSession } from "next-auth/react";
+import { preloadImage } from "../lib/preloadImage";
+// import { preloadVideo } from "../lib/preloadVideo"; 
+
+interface IBoostCard {
+  id: string;
+  imageUrl: string;
+  // other properties...
+}
+
+interface IUserBoosts {
+  [key: string]: number;
+}
 
 const GamePage: React.FC = () => {
-    const canvasRef = useRef<HTMLCanvasElement | null>(null);
-    const [score, setScore] = useState(0);
-    const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
-    const [gameOver, setGameOver] = useState(false);
-    const [totalCollectedValue, setTotalCollectedValue] = useState(0);
-    const [collectedMinerals, setCollectedMinerals] = useState<Record<string, { count: number; value: number }>>({});
+  const { data: session } = useSession();
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  
+  const [score, setScore] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
+  const [gameOver, setGameOver] = useState(false);
+  const [totalCollectedValue, setTotalCollectedValue] = useState(0);
+  const [collectedMinerals, setCollectedMinerals] = useState<Record<string, { count: number; value: number }>>({});
+  const [boostCards, setBoostCards] = useState<IBoostCard[]>([]);
+  const [userBoosts, setUserBoosts] = useState<IUserBoosts>({});
 
-    useEffect(() => {
-        const canvas = canvasRef.current;
+  const [isDataLoading, setIsDataLoading] = useState(true);
+  const [isImagesLoading, setIsImagesLoading] = useState(true);
 
-        if (canvas) {
-            const game = new Game(canvas, {
-                onScoreUpdate: (newScore) => setScore(newScore),
-                onTimeLeftUpdate: (newTime) => setTimeLeft(newTime),
-                onGameOver: async (collectedValue, minerals) => {
-                    setTotalCollectedValue(collectedValue);
-                    setCollectedMinerals(minerals);
-                    setGameOver(true);
-                    // Update coins in DB
-                    try {
-                        await axios.post("/api/updateCoins", { amount: collectedValue });
-                    } catch (error) {
-                        console.error("Failed to update coins:", error);
-                    }
-                },
-            });
-            game.startGame();
+  // Fetching boosts and user data at the page level
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const boostsResponse = await axios.get("/api/boost-cards");
+        setBoostCards(boostsResponse.data);
+
+        if (session) {
+          const userResponse = await axios.get("/api/user/data");
+          setUserBoosts(userResponse.data.boosts || {});
         }
 
-        return () => {
-            const context = canvasRef.current?.getContext("2d");
-            if (context && canvasRef.current) {
-                context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-            }
-        };
-    }, []);
-
-    const handleGoToMainMenu = () => {
-        router.push("/");
+        setIsDataLoading(false);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setIsDataLoading(false);
+      }
     };
+    fetchData();
+  }, [session]);
 
-    return (
-        <div className="w-full h-screen overflow-hidden touch-none relative">
-            <canvas ref={canvasRef} className="block w-full h-full"></canvas>
-            {!gameOver && <GameHUD score={score} timeLeft={timeLeft} />}
-            {gameOver && (
-                <GameOverModal
-                    totalCollectedValue={totalCollectedValue}
-                    collectedMinerals={collectedMinerals}
-                    onGoToMainMenu={handleGoToMainMenu}
-                />
-            )}
+  // Preload mineral images (and video if needed)
+  useEffect(() => {
+    const preloadAssets = async () => {
+      try {
+        const imagePromises = MINERALS.map((m) => preloadImage(m.src));
+        // If you have a background video:
+        // await Promise.all([...imagePromises, preloadVideo("/game/bg/123.mp4")]);
+        await Promise.all(imagePromises);
+        setIsImagesLoading(false);
+      } catch (err) {
+        console.error("Failed to load assets:", err);
+        setIsImagesLoading(false);
+      }
+    };
+    preloadAssets();
+  }, []);
+
+  // Once both data and images are loaded, start the game
+  useEffect(() => {
+    if (!isDataLoading && !isImagesLoading && canvasRef.current) {
+      const game = new Game(canvasRef.current, {
+        onScoreUpdate: (newScore) => setScore(newScore),
+        onTimeLeftUpdate: (newTime) => setTimeLeft(newTime),
+        onGameOver: async (collectedValue, minerals) => {
+          setTotalCollectedValue(collectedValue);
+          setCollectedMinerals(minerals);
+          setGameOver(true);
+          try {
+            await axios.post("/api/updatecoins", { amount: collectedValue });
+          } catch (error) {
+            console.error("Failed to update coins:", error);
+          }
+        },
+      });
+      game.startGame();
+    }
+
+    return () => {
+      const context = canvasRef.current?.getContext("2d");
+      if (context && canvasRef.current) {
+        context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      }
+    };
+  }, [isDataLoading, isImagesLoading]);
+
+  const handleGoToMainMenu = () => {
+    window.location.href = "/";
+  };
+
+  // Compute active boosts after data is loaded
+  const activeBoosts = boostCards
+    .filter((boost) => userBoosts[boost.id] > 0)
+    .map((boost) => ({
+      ...boost,
+      quantity: userBoosts[boost.id],
+    }));
+
+  const isLoading = isDataLoading || isImagesLoading;
+
+  return (
+    <div className="w-full h-screen overflow-hidden touch-none relative">
+      <canvas ref={canvasRef} className="block w-full h-full"></canvas>
+      
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center z-40 bg-black bg-opacity-50">
+          <h1 className="text-white text-2xl">Loading...</h1>
         </div>
-    );
+      )}
+
+      {!isLoading && !gameOver && (
+        <GameHUD
+          score={score}
+          timeLeft={timeLeft}
+          boostCards={activeBoosts}
+        />
+      )}
+
+      {gameOver && (
+        <GameOverModal
+          totalCollectedValue={totalCollectedValue}
+          collectedMinerals={collectedMinerals}
+          onGoToMainMenu={handleGoToMainMenu}
+        />
+      )}
+    </div>
+  );
 };
 
 export default GamePage;
