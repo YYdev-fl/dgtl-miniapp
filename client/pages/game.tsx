@@ -80,7 +80,7 @@ const GamePage: React.FC = () => {
           setCollectedMinerals(minerals);
           setGameOver(true);
           try {
-            await axios.post("/api/updatecoins", { amount: collectedValue });
+            await axios.post("/api/updateCoins", { amount: collectedValue });
           } catch (error) {
             console.error("Failed to update coins:", error);
           }
