@@ -11,7 +11,6 @@ import { preloadImage } from "../lib/preloadImage";
 interface IBoostCard {
   id: string;
   imageUrl: string;
-  // other properties...
 }
 
 interface IUserBoosts {
@@ -21,7 +20,8 @@ interface IUserBoosts {
 const GamePage: React.FC = () => {
   const { data: session } = useSession();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  
+  const gameRef = useRef<Game | null>(null); // Reference to the Game instance
+
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
   const [gameOver, setGameOver] = useState(false);
@@ -33,7 +33,7 @@ const GamePage: React.FC = () => {
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [isImagesLoading, setIsImagesLoading] = useState(true);
 
-  // Fetching boosts and user data at the page level
+  // Fetching boosts and user data
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -54,13 +54,11 @@ const GamePage: React.FC = () => {
     fetchData();
   }, [session]);
 
-  // Preload mineral images (and video if needed)
+  // Preload mineral images
   useEffect(() => {
     const preloadAssets = async () => {
       try {
         const imagePromises = MINERALS.map((m) => preloadImage(m.src));
-        // If you have a background video:
-        // await Promise.all([...imagePromises, preloadVideo("/game/bg/123.mp4")]);
         await Promise.all(imagePromises);
         setIsImagesLoading(false);
       } catch (err) {
@@ -88,7 +86,9 @@ const GamePage: React.FC = () => {
           }
         },
       });
+
       game.startGame();
+      gameRef.current = game; // Store the game instance in the ref
     }
 
     return () => {
@@ -98,6 +98,24 @@ const GamePage: React.FC = () => {
       }
     };
   }, [isDataLoading, isImagesLoading]);
+
+  const handleBoostClick = (boostId: string) => {
+    const currentQuantity = userBoosts[boostId] || 0;
+    if (currentQuantity > 0) {
+      // Decrement the boost from user's inventory
+      setUserBoosts((prev) => ({
+        ...prev,
+        [boostId]: prev[boostId] - 1,
+      }));
+
+      // Apply effect in the game
+      if (gameRef.current) {
+        gameRef.current.useBoost(boostId);
+      }
+    } else {
+      console.log("No boost of this type available.");
+    }
+  };
 
   const handleGoToMainMenu = () => {
     window.location.href = "/";
@@ -116,10 +134,10 @@ const GamePage: React.FC = () => {
   return (
     <div className="w-full h-screen overflow-hidden touch-none relative">
       <canvas ref={canvasRef} className="block w-full h-full"></canvas>
-      
+
       {isLoading && (
         <div className="fixed inset-0 flex items-center justify-center bg-base-100 z-50">
-            <div className="loading loading-spinner loading-lg mb-4"></div>
+          <div className="loading loading-spinner loading-lg mb-4"></div>
         </div>
       )}
 
@@ -128,6 +146,7 @@ const GamePage: React.FC = () => {
           score={score}
           timeLeft={timeLeft}
           boostCards={activeBoosts}
+          onBoostClick={handleBoostClick}
         />
       )}
 

@@ -151,4 +151,52 @@ export class Game {
             this.onGameOver(totalValue, this.collectedMinerals);
         }
     }
+
+    useBoost(boostId: string) {
+        switch (boostId) {
+          case 'speed':
+            this.applySpeedBoost();
+            break;
+          case 'dynamite':
+            this.applyDynamite();
+            break;
+          // Add cases for other boosts
+        }
+      }
+      
+      applySpeedBoost() {
+        // Clear the current spawn timer if any
+        if (this.spawnTimer) {
+          clearInterval(this.spawnTimer);
+        }
+      
+        // Spawn twice as fast for 5 seconds
+        const fastSpawnInterval = SPAWN_INTERVAL / 2;
+        this.spawnTimer = setInterval(() => this.spawnEntity(), fastSpawnInterval);
+      
+        // After 5 seconds, revert to normal
+        setTimeout(() => {
+          if (this.spawnTimer) {
+            clearInterval(this.spawnTimer);
+          }
+          this.spawnTimer = setInterval(() => this.spawnEntity(), SPAWN_INTERVAL);
+        }, 5000);
+      }
+      
+      applyDynamite() {
+        // Collect all visible minerals
+        let addedScore = 0;
+        for (const entity of this.entities) {
+          addedScore += entity.points;
+        }
+        this.entities = []; // remove them from the screen
+        this.score += addedScore;
+      
+        // Notify score update
+        if (this.onScoreUpdate) {
+          this.onScoreUpdate(this.score);
+        }
+      
+        // No timer needed, effect is immediate
+      }
 }

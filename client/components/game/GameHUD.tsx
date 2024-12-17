@@ -10,9 +10,10 @@ interface GameHUDProps {
   score: number;
   timeLeft: number;
   boostCards: IActiveBoost[];
+  onBoostClick: (boostId: string) => void;
 }
 
-const GameHUD: React.FC<GameHUDProps> = ({ score, timeLeft, boostCards }) => {
+const GameHUD: React.FC<GameHUDProps> = ({ score, timeLeft, boostCards, onBoostClick }) => {
   return (
     <>
       <h1 className="absolute top-4 left-4 text-2xl z-20 pointer-events-none">
@@ -22,21 +23,20 @@ const GameHUD: React.FC<GameHUDProps> = ({ score, timeLeft, boostCards }) => {
         Time Left: {timeLeft}s
       </h2>
 
+      {/* Boosts Display */}
       <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-2">
         {boostCards.map((boost) => (
           <div
             key={boost.id}
-            className="relative w-16 h-16"
-            style={{ position: "relative", width: "64px", height: "64px" }}
+            className="relative w-16 h-16 cursor-pointer"
+            onClick={() => onBoostClick(boost.id)}
           >
             <img
               src={boost.imageUrl}
               alt={`Boost ${boost.id}`}
               className="w-full h-full object-contain rounded-xl"
             />
-            <span
-              className="absolute bottom-1.5 left-1.5 text-white text-xs font-bold"
-            >
+            <span className="absolute bottom-1.5 left-1.5 text-white text-xs font-bold">
               x{boost.quantity}
             </span>
           </div>

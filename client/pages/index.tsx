@@ -131,7 +131,7 @@ const Index = () => {
                   </>
                 ) : (
                   /* Locked state */
-                  <div className="card h-[150px] w-full flex items-center justify-center border-2 border-accent shadow-glow">
+                  <div className="relative rounded-lg mb-2 shadow-inner overflow-hidden bg-neutral-content border-2 border-accent">
                     <span className="text-white text-xl font-bold ">Locked</span>
                   </div>
                 )}
