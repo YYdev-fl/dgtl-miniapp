@@ -118,9 +118,9 @@ const GamePage: React.FC = () => {
       <canvas ref={canvasRef} className="block w-full h-full"></canvas>
       
       {isLoading && (
-        <div className="flex items-center justify-center h-screen w-screen bg-base-100">
-        <div className="loading loading-spinner loading-lg mb-4"></div>
-      </div>
+        <div className="fixed inset-0 flex items-center justify-center bg-base-100 z-50">
+            <div className="loading loading-spinner loading-lg mb-4"></div>
+        </div>
       )}
 
       {!isLoading && !gameOver && (
