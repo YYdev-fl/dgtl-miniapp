@@ -121,7 +121,7 @@ const GamePage: React.FC = () => {
     }
 
     // Start cooldown timer (3 seconds)
-    setCooldowns((prev) => ({ ...prev, [boostId]: 3 }));
+    setCooldowns((prev) => ({ ...prev, [boostId]: 5 }));
 
     const cooldownInterval = setInterval(() => {
       setCooldowns((prev) => {

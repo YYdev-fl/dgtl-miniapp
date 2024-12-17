@@ -28,6 +28,7 @@ export class Game {
     spawnTimer: NodeJS.Timeout | null = null;
     gameTimer: NodeJS.Timeout | null = null;
     lastUpdateTime: number = 0;
+    doublePointsActive: boolean = false;
 
     // Track collected minerals
     collectedMinerals: CollectedMinerals = {};
@@ -72,7 +73,7 @@ export class Game {
             for (let i = this.entities.length - 1; i >= 0; i--) {
                 if (this.entities[i].isClicked(mouseX, mouseY)) {
                     const entity = this.entities[i];
-                    this.score += entity.points;
+                    this.score += this.doublePointsActive ? entity.points * 2 : entity.points;
                     // Track collected minerals
                     const imgSrc = entity.image.src;
                     if (!this.collectedMinerals[imgSrc]) {
@@ -160,11 +161,12 @@ export class Game {
           case 'boost2':
             this.applyDynamite();
             break;
-          // Add cases for other boosts
+          case 'boost3':
+            this.applyDoublePointsBoost();
         }
       }
       
-    applySpeedBoost() {
+    private applySpeedBoost() {
     // Clear the current spawn timer if any
     if (this.spawnTimer) {
         clearInterval(this.spawnTimer);
@@ -211,4 +213,18 @@ export class Game {
         this.onScoreUpdate(this.score);
     }
     }
+
+    private applyDoublePointsBoost() {
+        if (this.doublePointsActive) return; // Prevent overlapping boosts
+    
+        console.log("Double Points Boost Activated!");
+        this.doublePointsActive = true;
+    
+        setTimeout(() => {
+          console.log("Double Points Boost Ended!");
+          this.doublePointsActive = false;
+        }, 3000);
+      }
+
+
 }
