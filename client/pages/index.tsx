@@ -131,7 +131,7 @@ const Index = () => {
                   </>
                 ) : (
                   /* Locked state */
-                  <div className="relative rounded-lg mb-2 shadow-inner overflow-hidden bg-neutral-content border-2 border-accent">
+                  <div className="h-[150px] relative rounded-lg mb-2 shadow-inner overflow-hidden bg-base-100 border-2 border-accent">
                     <span className="text-white text-xl font-bold ">Locked</span>
                   </div>
                 )}
