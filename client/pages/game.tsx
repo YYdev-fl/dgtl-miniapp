@@ -38,6 +38,7 @@ const GamePage: React.FC = () => {
 
   const usedBoostsRef = useRef<UserBoosts>({}); // Track boosts used during the game
 
+
   /**
    * Function to update game data on the server
    */
@@ -46,7 +47,7 @@ const GamePage: React.FC = () => {
     usedBoosts: Record<string, number>
   ) => {
     try {
-      const response = await axios.post("/api/updateCoins", {
+      const response = await axios.post("/api/updateGameData", {
         amount: collectedValue,
         boostsUsed: usedBoosts,
       });
@@ -57,7 +58,7 @@ const GamePage: React.FC = () => {
       throw error;
     }
   };
-
+  
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -116,7 +117,9 @@ const GamePage: React.FC = () => {
     setGameOver(true);
 
     try {
-      await updateGameData(collectedValue, usedBoostsRef.current);
+      // Synchronize coins and used boosts
+      const response = await updateGameData(collectedValue, usedBoostsRef.current);
+      console.log("Game data updated successfully:", response);
     } catch (error) {
       console.error("Failed to update game data:", error);
     }
