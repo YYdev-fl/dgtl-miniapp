@@ -6,7 +6,7 @@ interface CollectedMinerals {
     [imageSrc: string]: {
         count: number;
         value: number; 
-    }
+    };
 }
 
 interface GameCallbacks {
@@ -16,26 +16,28 @@ interface GameCallbacks {
 }
 
 export class Game {
-    canvas: HTMLCanvasElement;
-    context: CanvasRenderingContext2D;
-    offscreenCanvas: HTMLCanvasElement;
-    offscreenContext: CanvasRenderingContext2D;
-    windowWidth: number;
-    windowHeight: number;
-    entities: ImageEntity[] = [];
-    score: number = 0;
-    gameTime: number = GAME_DURATION;
-    spawnTimer: NodeJS.Timeout | null = null;
-    gameTimer: NodeJS.Timeout | null = null;
-    lastUpdateTime: number = 0;
-    doublePointsActive: boolean = false;
+    private canvas: HTMLCanvasElement;
+    private context: CanvasRenderingContext2D;
+    private offscreenCanvas: HTMLCanvasElement;
+    private offscreenContext: CanvasRenderingContext2D;
 
-    // Track collected minerals
-    collectedMinerals: CollectedMinerals = {};
+    private windowWidth: number;
+    private windowHeight: number;
 
-    onScoreUpdate?: (score: number) => void;
-    onTimeLeftUpdate?: (timeLeft: number) => void;
-    onGameOver?: (totalCollectedValue: number, collectedMinerals: CollectedMinerals) => void;
+    private entities: ImageEntity[] = [];
+    private score: number = 0;
+    private gameTime: number = GAME_DURATION;
+    private spawnTimer: NodeJS.Timeout | null = null;
+    private gameTimer: NodeJS.Timeout | null = null;
+    private lastUpdateTime: number = 0;
+    private scoreMultiplier: number = 1;
+    private doublePointsActive: boolean = false;
+    private collectedMinerals: CollectedMinerals = {};
+
+    // External callbacks for game events
+    private onScoreUpdate?: (score: number) => void;
+    private onTimeLeftUpdate?: (timeLeft: number) => void;
+    private onGameOver?: (totalCollectedValue: number, collectedMinerals: CollectedMinerals) => void;
 
     constructor(canvas: HTMLCanvasElement, callbacks: GameCallbacks = {}) {
         this.canvas = canvas;
@@ -47,7 +49,7 @@ export class Game {
         this.onTimeLeftUpdate = callbacks.onTimeLeftUpdate;
         this.onGameOver = callbacks.onGameOver;
 
-        // Create offscreen canvas
+        // Setup offscreen rendering for performance
         this.offscreenCanvas = document.createElement("canvas");
         this.offscreenCanvas.width = this.windowWidth;
         this.offscreenCanvas.height = this.windowHeight;
@@ -57,64 +59,100 @@ export class Game {
         this.setupEventListeners();
     }
 
-    setupCanvas() {
+    /**
+     * Initializes the main canvas properties such as size and background.
+     */
+    private setupCanvas() {
         this.canvas.style.background = "#000";
         this.canvas.width = this.windowWidth;
         this.canvas.height = this.windowHeight;
     }
 
-    setupEventListeners() {
+    /**
+     * Registers event listeners for user interaction.
+     */
+    private setupEventListeners() {
+        this.canvas.addEventListener("pointerdown", this.handlePointerDown.bind(this));
+    }
+
+    /**
+     * Pointer down event handler to detect clicks on entities.
+     */
+    private handlePointerDown(event: PointerEvent) {
         this.canvas.addEventListener("pointerdown", (event: PointerEvent) => {
             const rect = this.canvas.getBoundingClientRect();
             const mouseX = (event.clientX - rect.left) * (this.canvas.width / rect.width);
             const mouseY = (event.clientY - rect.top) * (this.canvas.height / rect.height);
 
-            // Check top-most entity
             for (let i = this.entities.length - 1; i >= 0; i--) {
                 if (this.entities[i].isClicked(mouseX, mouseY)) {
+                    // Instead of duplicating logic here,
+                    // just call the unified collect logic.
                     const entity = this.entities[i];
-                    this.score += this.doublePointsActive ? entity.points * 2 : entity.points;
-                    // Track collected minerals
-                    const imgSrc = entity.image.src;
-                    if (!this.collectedMinerals[imgSrc]) {
-                        this.collectedMinerals[imgSrc] = { count: 0, value: entity.points };
-                    }
-                    this.collectedMinerals[imgSrc].count += 1;
-
+                    this.collectEntity(entity);
                     this.entities.splice(i, 1);
-
-                    // Call score update callback
-                    if (this.onScoreUpdate) {
-                        this.onScoreUpdate(this.score);
-                    }
-
                     break;
                 }
             }
         });
     }
 
-    spawnEntity() {
+
+    /**
+     * Unified method to handle collecting an entity.
+     * Applies any active multipliers and updates score & collectedMinerals.
+     */
+    private collectEntity(entity: ImageEntity) {
+        const pointsEarned = entity.points * this.scoreMultiplier;
+        this.score += pointsEarned;
+
+        const imgSrc = entity.image.src;
+        if (!this.collectedMinerals[imgSrc]) {
+            this.collectedMinerals[imgSrc] = { count: 0, value: entity.points };
+        }
+        this.collectedMinerals[imgSrc].count += 1;
+
+        // Update the UI about score
+        if (this.onScoreUpdate) {
+            this.onScoreUpdate(this.score);
+        }
+    }
+
+    /**
+     * Spawns a new mineral entity at a random position with a random speed.
+     */
+    private spawnEntity() {
         const randomX = Math.random() * (this.windowWidth - 50);
         const speedFactor = this.windowHeight / BASE_HEIGHT; 
         const randomSpeed = (Math.random() * (MAX_SPEED - MIN_SPEED) + MIN_SPEED) * speedFactor; 
         const mineral = getRandomMineral(MINERALS);
+
         const entity = new ImageEntity(randomX, -50, mineral.src, randomSpeed, mineral.points);
         this.entities.push(entity);
     }
 
-    updateEntities(currentTime: number = 0) {
+    /**
+     * The main game update loop, called every animation frame.
+     * Handles entity updates, clearing off-screen entities, and rendering.
+     */
+    private updateEntities(currentTime: number = 0) {
         const deltaTime = (currentTime - this.lastUpdateTime) / 1000;
         this.lastUpdateTime = currentTime;
 
+        // Clear offscreen context before drawing
         this.offscreenContext.clearRect(0, 0, this.windowWidth, this.windowHeight);
+
+        // Update each entity based on deltaTime
         this.entities.forEach((entity) => entity.update(this.offscreenContext, deltaTime));
+
+        // Filter out entities that moved off-screen
         this.entities = this.entities.filter((entity) => !entity.isOffScreen(this.windowHeight));
 
-        // Draw offscreen to main
+        // Render the offscreen canvas onto the main canvas
         this.context.clearRect(0, 0, this.windowWidth, this.windowHeight);
         this.context.drawImage(this.offscreenCanvas, 0, 0);
 
+        // Check if game should end
         if (this.gameTime <= 0) {
             this.endGame();
         } else {
@@ -122,24 +160,36 @@ export class Game {
         }
     }
 
-    startGame() {
+    /**
+     * Starts the game by setting up timers and initial conditions.
+     */
+    public startGame() {
         this.lastUpdateTime = performance.now(); 
+
+        // Spawn entities at a fixed interval
         this.spawnTimer = setInterval(() => this.spawnEntity(), SPAWN_INTERVAL);
+
+        // Decrement the game time every second
         this.gameTimer = setInterval(() => {
             this.gameTime -= 1;
             if (this.onTimeLeftUpdate) {
                 this.onTimeLeftUpdate(this.gameTime);
             }
+            
+            // When time hits zero, stop spawning new entities
             if (this.gameTime <= 0) {
-                clearInterval(this.spawnTimer!);
-                clearInterval(this.gameTimer!);
+                this.clearTimers();
             }
         }, 1000);
 
+        // Begin the entity update loop
         this.updateEntities(this.lastUpdateTime);
     }
 
-    endGame() {
+    /**
+     * Ends the game, calculates final results, and triggers the onGameOver callback.
+     */
+    private endGame() {
         // Calculate total collected value
         let totalValue = 0;
         for (const mineralKey in this.collectedMinerals) {
@@ -147,84 +197,101 @@ export class Game {
             totalValue += count * value;
         }
 
-        // Notify via callback that the game ended
         if (this.onGameOver) {
             this.onGameOver(totalValue, this.collectedMinerals);
         }
+
+        // Consider stopping and resetting game states if needed.
+        this.clearTimers();
     }
 
-    useBoost(boostId: string) {
-        switch (boostId) {
-          case 'boost1':
-            this.applySpeedBoost();
-            break;
-          case 'boost2':
-            this.applyDynamite();
-            break;
-          case 'boost3':
-            this.applyDoublePointsBoost();
-        }
-      }
-      
-    private applySpeedBoost() {
-    // Clear the current spawn timer if any
-    if (this.spawnTimer) {
-        clearInterval(this.spawnTimer);
-    }
-    
-    // Spawn twice as fast for 5 seconds
-    const fastSpawnInterval = SPAWN_INTERVAL / 2;
-    this.spawnTimer = setInterval(() => this.spawnEntity(), fastSpawnInterval);
-    
-    // After 5 seconds, revert to normal
-    setTimeout(() => {
+    /**
+     * Clears all running timers (spawn and game countdown) to prevent memory leaks.
+     */
+    private clearTimers() {
         if (this.spawnTimer) {
-        clearInterval(this.spawnTimer);
+            clearInterval(this.spawnTimer);
+            this.spawnTimer = null;
         }
-        this.spawnTimer = setInterval(() => this.spawnEntity(), SPAWN_INTERVAL);
-    }, 5000);
-    }
-      
-    private applyDynamite() {
-    let addedScore = 0;
-    
-    // For each entity, add its points to score and update collectedMinerals
-    for (const entity of this.entities) {
-        addedScore += entity.points;
-    
-        const imgSrc = entity.image.src;
-        if (!this.collectedMinerals[imgSrc]) {
-        // If this mineral type isn't recorded yet, initialize it
-        this.collectedMinerals[imgSrc] = { count: 0, value: entity.points };
+
+        if (this.gameTimer) {
+            clearInterval(this.gameTimer);
+            this.gameTimer = null;
         }
-    
-        // Increase the count for this mineral
-        this.collectedMinerals[imgSrc].count += 1;
-    }
-    
-    // Clear all entities from the screen
-    this.entities = [];
-    
-    // Increase the score
-    this.score += addedScore;
-    
-    // Notify the HUD about the updated score
-    if (this.onScoreUpdate) {
-        this.onScoreUpdate(this.score);
-    }
     }
 
+    /**
+     * Allows external triggering of boosts/power-ups.
+     * Currently supports three types of boosts, can be extended easily.
+     */
+    public useBoost(boostId: string) {
+        switch (boostId) {
+            case 'boost1':
+                this.applySpeedBoost();
+                break;
+            case 'boost2':
+                this.applyDynamite();
+                break;
+            case 'boost3':
+                this.applyDoublePointsBoost();
+                break;
+            default:
+                console.warn(`Unknown boost ID: ${boostId}`);
+        }
+    }
+      
+    /**
+     * Temporarily reduces the spawn interval for faster spawning.
+     * Resets after 5 seconds.
+     */
+    private applySpeedBoost() {
+        // Clear current spawn interval if active
+        if (this.spawnTimer) {
+            clearInterval(this.spawnTimer);
+        }
+        
+        // Spawn entities twice as fast
+        const fastSpawnInterval = SPAWN_INTERVAL / 2;
+        this.spawnTimer = setInterval(() => this.spawnEntity(), fastSpawnInterval);
+        
+        // After 5 seconds, revert to normal spawn rate
+        setTimeout(() => {
+            if (this.spawnTimer) {
+                clearInterval(this.spawnTimer);
+            }
+            this.spawnTimer = setInterval(() => this.spawnEntity(), SPAWN_INTERVAL);
+        }, 5000);
+    }
+      
+    /**
+     * Dynamite boost clears all current entities, giving immediate points for all on-screen minerals.
+     */
+    private applyDynamite() {
+        // Instead of manually duplicating scoring logic here:
+        // just loop through entities and use collectEntity for each.
+        for (const entity of this.entities) {
+            this.collectEntity(entity);
+        }
+
+        // Clear all entities
+        this.entities = [];
+    }
+
+    /**
+     * Double points boost makes all future clicks worth double.
+     * Lasts for 3 seconds.
+     */
     private applyDoublePointsBoost() {
-        if (this.doublePointsActive) return; // Prevent overlapping boosts
-    
+        if (this.doublePointsActive) return;
+
         console.log("Double Points Boost Activated!");
         this.doublePointsActive = true;
-    
+        this.scoreMultiplier = 2; // Apply multiplier here
+
         setTimeout(() => {
-          console.log("Double Points Boost Ended!");
-          this.doublePointsActive = false;
+            console.log("Double Points Boost Ended!");
+            this.doublePointsActive = false;
+            this.scoreMultiplier = 1; // Revert to normal multiplier
         }, 3000);
-      }
-
-
+    }
 }
