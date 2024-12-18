@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Game } from "../game/gameLogic";
 import GameHUD from "../components/game/GameHUD";
 import GameOverModal from "../components/game/GameOverModal";
 import { GAME_DURATION, MINERALS } from "../game/constants/gameData";
-import axios from "axios";
-import { useSession } from "next-auth/react";
 import { preloadImage } from "../lib/preloadImage";
+import { useSession } from "next-auth/react";
+import axios from "axios";
 
 interface BoostCard {
   id: string;
@@ -30,18 +30,34 @@ const GamePage: React.FC = () => {
   const [collectedMinerals, setCollectedMinerals] = useState<
     Record<string, { count: number; value: number }>
   >({});
-
   const [boostCards, setBoostCards] = useState<BoostCard[]>([]);
   const [userBoosts, setUserBoosts] = useState<UserBoosts>({});
   const [cooldowns, setCooldowns] = useState<{ [key: string]: number | null }>({});
-
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [isImagesLoading, setIsImagesLoading] = useState(true);
 
+  const usedBoostsRef = useRef<UserBoosts>({}); // Track boosts used during the game
+
   /**
-   * Fetch data for boosts and user. 
-   * Extracting this logic makes it easier to modify in the future.
+   * Function to update game data on the server
    */
+  const updateGameData = async (
+    collectedValue: number,
+    usedBoosts: Record<string, number>
+  ) => {
+    try {
+      const response = await axios.post("/api/updateСoins", {
+        amount: collectedValue,
+        boostsUsed: usedBoosts,
+      });
+      console.log("Game data updated successfully:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error updating game data:", error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -63,10 +79,6 @@ const GamePage: React.FC = () => {
     fetchData();
   }, [session]);
 
-  /**
-   * Preload all mineral images before starting the game.
-   * Keeping asset loading separate makes it easy to add more preloads later.
-   */
   useEffect(() => {
     const preloadAssets = async () => {
       try {
@@ -82,32 +94,12 @@ const GamePage: React.FC = () => {
     preloadAssets();
   }, []);
 
-  /**
-   * Initializes and starts the game once all data and images are loaded.
-   */
-  useEffect(() => {
-    if (!isDataLoading && !isImagesLoading && canvasRef.current) {
-      initializeGame();
-    }
-
-    // Cleanup rendering context on component unmount or dependency changes
-    return () => {
-      const context = canvasRef.current?.getContext("2d");
-      if (context && canvasRef.current) {
-        context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-      }
-    };
-  }, [isDataLoading, isImagesLoading]);
-
-  /**
-   * A dedicated function to initialize the game.
-   * Keeps the useEffect tidy and focused on lifecycle management.
-   */
   const initializeGame = () => {
     if (!canvasRef.current) return;
+
     const game = new Game(canvasRef.current, {
-      onScoreUpdate: (newScore) => setScore(newScore),
-      onTimeLeftUpdate: (newTime) => setTimeLeft(newTime),
+      onScoreUpdate: setScore,
+      onTimeLeftUpdate: setTimeLeft,
       onGameOver: handleGameOver,
     });
 
@@ -115,26 +107,21 @@ const GamePage: React.FC = () => {
     gameRef.current = game;
   };
 
-  /**
-   * Handler for when the game is over.
-   * Separated for clarity and reusability.
-   */
-  const handleGameOver = async (collectedValue: number, minerals: Record<string, { count: number; value: number }>) => {
+  const handleGameOver = async (
+    collectedValue: number,
+    minerals: Record<string, { count: number; value: number }>
+  ) => {
     setTotalCollectedValue(collectedValue);
     setCollectedMinerals(minerals);
     setGameOver(true);
 
     try {
-      await axios.post("/api/updateCoins", { amount: collectedValue });
+      await updateGameData(collectedValue, usedBoostsRef.current);
     } catch (error) {
-      console.error("Failed to update coins:", error);
+      console.error("Failed to update game data:", error);
     }
   };
 
-  /**
-   * Handles a click on a boost card. 
-   * Checks availability, handles cooldown, and applies the boost to the game.
-   */
   const handleBoostClick = (boostId: string) => {
     const currentQuantity = userBoosts[boostId] || 0;
 
@@ -144,28 +131,23 @@ const GamePage: React.FC = () => {
     }
 
     if (currentQuantity > 0) {
-      // Decrement boost count in user's inventory
+      // Deduct locally and track used boosts
       setUserBoosts((prev) => ({
         ...prev,
         [boostId]: prev[boostId] - 1,
       }));
+      usedBoostsRef.current[boostId] = (usedBoostsRef.current[boostId] || 0) + 1;
 
-      // Apply effect in the game
       if (gameRef.current) {
         gameRef.current.useBoost(boostId);
       }
 
-      // Start the cooldown for this boost
       startBoostCooldown(boostId, BOOST_COOLDOWN_DURATION);
     } else {
       console.log("No boost of this type available.");
     }
   };
 
-  /**
-   * Starts a cooldown for a given boost.
-   * Encapsulating this logic lets us easily change the cooldown duration logic if needed.
-   */
   const startBoostCooldown = (boostId: string, duration: number) => {
     setCooldowns((prev) => ({ ...prev, [boostId]: duration }));
 
@@ -188,17 +170,17 @@ const GamePage: React.FC = () => {
     }, 1000);
   };
 
-  const handleGoToMainMenu = () => {
-    window.location.href = "/";
-  };
-
-  // Compute active boosts to display in the HUD
-  const activeBoosts = boostCards
-    .filter((boost) => userBoosts[boost.id] > 0)
-    .map((boost) => ({
-      ...boost,
-      quantity: userBoosts[boost.id],
-    }));
+  useEffect(() => {
+    if (!isDataLoading && !isImagesLoading && canvasRef.current) {
+      initializeGame();
+    }
+    return () => {
+      const context = canvasRef.current?.getContext("2d");
+      if (context && canvasRef.current) {
+        context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      }
+    };
+  }, [isDataLoading, isImagesLoading]);
 
   const isLoading = isDataLoading || isImagesLoading;
 
@@ -216,7 +198,10 @@ const GamePage: React.FC = () => {
         <GameHUD
           score={score}
           timeLeft={timeLeft}
-          boostCards={activeBoosts}
+          boostCards={boostCards.map((boost) => ({
+            ...boost,
+            quantity: userBoosts[boost.id],
+          }))}
           onBoostClick={handleBoostClick}
           cooldowns={cooldowns}
         />
@@ -226,7 +211,7 @@ const GamePage: React.FC = () => {
         <GameOverModal
           totalCollectedValue={totalCollectedValue}
           collectedMinerals={collectedMinerals}
-          onGoToMainMenu={handleGoToMainMenu}
+          onGoToMainMenu={() => (window.location.href = "/")}
         />
       )}
     </div>
