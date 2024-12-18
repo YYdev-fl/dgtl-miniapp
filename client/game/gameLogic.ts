@@ -6,6 +6,7 @@ interface CollectedMinerals {
     [imageSrc: string]: {
         count: number;
         value: number; 
+        totalPoints: number; 
     };
 }
 
@@ -86,8 +87,6 @@ export class Game {
 
             for (let i = this.entities.length - 1; i >= 0; i--) {
                 if (this.entities[i].isClicked(mouseX, mouseY)) {
-                    // Instead of duplicating logic here,
-                    // just call the unified collect logic.
                     const entity = this.entities[i];
                     this.collectEntity(entity);
                     this.entities.splice(i, 1);
@@ -105,19 +104,26 @@ export class Game {
     private collectEntity(entity: ImageEntity) {
         const pointsEarned = entity.points * this.scoreMultiplier;
         this.score += pointsEarned;
-
+    
         const imgSrc = entity.image.src;
         if (!this.collectedMinerals[imgSrc]) {
-            this.collectedMinerals[imgSrc] = { count: 0, value: entity.points };
+            // Initialize the entry with count, value, and totalPoints
+            this.collectedMinerals[imgSrc] = {
+                count: 0,
+                value: entity.points, // Set the base value here
+                totalPoints: 0,
+            };
         }
+    
+        // Update the entry
         this.collectedMinerals[imgSrc].count += 1;
-
-        // Update the UI about score
+        this.collectedMinerals[imgSrc].totalPoints += pointsEarned;
+    
         if (this.onScoreUpdate) {
             this.onScoreUpdate(this.score);
         }
     }
-
+    
     /**
      * Spawns a new mineral entity at a random position with a random speed.
      */
@@ -190,20 +196,21 @@ export class Game {
      * Ends the game, calculates final results, and triggers the onGameOver callback.
      */
     private endGame() {
-        // Calculate total collected value
+        // Calculate total collected value using `totalPoints` to include boosts
         let totalValue = 0;
         for (const mineralKey in this.collectedMinerals) {
-            const { count, value } = this.collectedMinerals[mineralKey];
-            totalValue += count * value;
+            totalValue += this.collectedMinerals[mineralKey].totalPoints;
         }
-
+    
+        // Trigger the game-over callback with the correct total value
         if (this.onGameOver) {
             this.onGameOver(totalValue, this.collectedMinerals);
         }
-
-        // Consider stopping and resetting game states if needed.
+    
+        // Clear any running timers
         this.clearTimers();
     }
+    
 
     /**
      * Clears all running timers (spawn and game countdown) to prevent memory leaks.
