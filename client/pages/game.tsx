@@ -46,7 +46,7 @@ const GamePage: React.FC = () => {
     usedBoosts: Record<string, number>
   ) => {
     try {
-      const response = await axios.post("/api/updateСoins", {
+      const response = await axios.post("/api/updateCoins", {
         amount: collectedValue,
         boostsUsed: usedBoosts,
       });
