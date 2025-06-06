@@ -1,5 +1,4 @@
-import { useRouter } from "next/router";
-
+import { useRouter } from "next/router"; 
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
@@ -14,7 +13,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       {/* Tab Navigation */}
       <div
         role="tablist"
-        className="fixed bottom-0 left-0 right-0 tabs tabs-boxed p-3"
+        className="fixed bottom-0 left-0 right-0 tabs tabs-boxed p-3 z-30"
       >
         <a
           role="tab"
@@ -43,6 +42,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           href="/friends"
         >
           <img src="/icons/white/user-group.svg" alt="Friends" className="w-8 h-8" />
+        </a>
+        <a
+          role="tab"
+          className={`tab h-16 ${isActive("/periodic-table") ? "border-2 border-accent shadow-glow" : ""}`}
+          href="/periodic-table"
+        >
+          <img src="/icons/white/periodic-table.svg" alt="Periodic Table" className="w-8 h-8" />
         </a>
       </div>
     </div>

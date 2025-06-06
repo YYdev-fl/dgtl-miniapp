@@ -2,9 +2,13 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Layout from '../components/layout';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { IUser } from '../models/User';
 import { ILevel } from '../models/Level';
+import ChemicalBadge from '../components/ChemicalBadge';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+import Head from 'next/head';
 
 const Index = () => {
   const { data: session, status } = useSession();
@@ -14,69 +18,121 @@ const Index = () => {
   const [levels, setLevels] = useState<ILevel[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
+  console.log('[Index Page Render] Status:', status, 'Loading State:', loading, 'UserData:', userData ? `${userData.username}/${userData.firstName}` : 'null');
+
+  const fetchLevels = useCallback(async () => {
+    console.log('[Index Page] fetchLevels called');
+    setLoading(true);
+    try {
+      const response = await axios.get('/api/leveldata');
+      let levelsData = response.data;
+      console.log('[Client Index Page] Fetched levels data for UI:', JSON.stringify(levelsData, null, 2));
+      if (levelsData.length < 13) {
+        const filled = [...levelsData];
+        for (let i = levelsData.length; i < 13; i++) {
+          filled.push({
+            name: `Level ${i+1}`,
+            badges: [],
+            backgroundUrl: '',
+            order: i+1,
+            availability: false
+          });
+        }
+        levelsData = filled;
+      }
+      setLevels(levelsData);
+      console.log('[Index Page] fetchLevels success');
+    } catch (error) {
+      console.error('Error fetching levels:', error);
+      toast.error('Could not load levels.');
+      setLevels([]);
+    } finally {
+      console.log('[Index Page] fetchLevels finally');
+    }
+  }, []);
+
+  const fetchUserData = useCallback(async () => {
+    console.log('[Index Page] fetchUserData called. Session:', session ? 'exists' : 'null');
+    if (session?.user?.telegramId) {
+      setLoading(true);
       try {
         const res = await fetch('/api/user/data');
         if (!res.ok) throw new Error('Failed to fetch user data');
         const data = await res.json();
+        console.log('[Index Page] UserData fetched:', data);
         setUserData(data);
       } catch (error) {
         console.error('Error fetching user data:', error);
-      } 
-    };
-
-    const fetchLevels = async () => {
-      try {
-        const res = await fetch('/api/leveldata');
-        if (!res.ok) throw new Error('Failed to fetch levels');
-        const data = await res.json();
-        setLevels(data);
-      } catch (error) {
-        console.error('Error fetching levels:', error);
-      } 
-    };
-
-    const initData = async () => {
-      if (status === 'authenticated') {
-        await Promise.all([fetchUserData(), fetchLevels()]);
+        toast.error('Could not load user data.');
+        setUserData(null);
+      } finally {
         setLoading(false);
-      } else if (status === 'unauthenticated') {
-        setLoading(false);
-        router.replace('/authpage'); // Redirect if unauthenticated
+        console.log('[Index Page] fetchUserData finally, setLoading(false)');
       }
-    };
+    } else {
+      console.log('[Index Page] fetchUserData: No session or telegramId, setLoading(false)');
+      setLoading(false);
+      setUserData(null);
+    }
+  }, [session]);
 
-    initData();
-  }, [status, router]);
+  useEffect(() => {
+    console.log('[Index Page] useEffect [status, fetchUserData] triggered. Status:', status);
+    if (status === 'authenticated') {
+      fetchUserData();
+    } else if (status === 'unauthenticated') {
+      console.log('[Index Page] Status unauthenticated, redirecting to /authpage and setLoading(false).');
+      setLoading(false);
+      router.replace('/authpage');
+    } else if (status === 'loading') {
+      console.log('[Index Page] Session status is loading, ensuring setLoading(true)');
+      setLoading(true);
+    }
+  }, [status, router, fetchUserData]);
+
+  useEffect(() => {
+    fetchLevels();
+  }, [fetchLevels]);
+
+  console.log('[Index Page] PRE-RETURN. Status:', status, 'Loading State:', loading, 'UserData:', userData ? `${userData.username}/${userData.firstName}` : 'null');
 
   if (status === 'loading' || loading) {
+    console.log('[Index Page] Rendering LOADING spinner.');
     return (
       <Layout>
-      <div className="flex items-center justify-center h-screen w-screen bg-base-100">
-        <div className="loading loading-spinner loading-lg mb-4"></div>
-      </div>
+        <Head>
+          <title>Home | DGTL P2E Game</title>
+        </Head>
+        <div className="flex items-center justify-center h-screen w-screen bg-base-100">
+          <div className="loading loading-spinner loading-lg mb-4"></div>
+        </div>
       </Layout>
     );
   }
 
   if (!userData) {
     return (
-
-      <div className="flex items-center justify-center h-screen w-screen bg-base-100">
-        <p className="text-lg text-red-500">Failed to load user data. Please try again.</p>
-      </div>
-      
+      <Layout>
+        <Head>
+          <title>Home | DGTL P2E Game</title>
+        </Head>
+        <div className="flex items-center justify-center h-screen w-screen bg-base-100">
+          <p className="text-lg text-red-500">Failed to load user data. Please try again.</p>
+        </div>
+      </Layout>
     );
   }
 
   return (
     <Layout>
-      <div className="flex flex-col min-h-screen p-3">
+      <Head>
+        <title>Home | DGTL P2E Game</title>
+      </Head>
+      <div className="container mx-auto px-4 py-8 pb-24">
         {/* Main Card */}
         <div className="card bg-neutral shadow-xl mb-3">
           <div className="card-body text-white p-4">
-            <h2 className="card-title text-2xl">{session?.user.username || 'Unknown User'}</h2>
+            <h2 className="card-title text-2xl">{userData?.username || userData?.firstName || 'Player'}</h2>
           </div>
         </div>
 
@@ -84,7 +140,7 @@ const Index = () => {
         <div className="stats bg-neutral text-primary-content">
           <div className="stat">
             <div className="stat-title">Account balance</div>
-            <div className="stat-value text-white text-3xl">{userData.coins} GTL</div>
+            <div className="stat-value text-white text-3xl">{typeof userData.coins === 'number' ? userData.coins.toFixed(2) : userData.coins} GTL</div>
           </div>
           <div className="stat">
             <div className="stat-title">Level</div>
@@ -108,13 +164,13 @@ const Index = () => {
                     {/* Badges */}
                     <div className="flex absolute top-2 left-2 flex-wrap gap-2 z-10">
                       {level.badges.map((badge, i) => (
-                        <div className="badge badge-outline" key={i}>{badge}</div>
+                        <ChemicalBadge key={i} element={badge} />
                       ))}
                     </div>
                     
                     {/* Level background image */}
                     <img
-                      src={level.backgroundUrl}
+                      src={level.menuImageUrl || level.backgroundUrl || '/default-level-bg.jpg'}
                       alt={level.name}
                       className="h-[150px] w-full object-cover"
                     />
@@ -122,9 +178,8 @@ const Index = () => {
                     <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black to-transparent flex items-center justify-between">
                       <div>
                         <h2 className="text-lg font-bold text-white">{level.name}</h2>
-                        {/* If you have tickets or other data, show them here */}
                       </div>
-                      <Link href="/game">
+                      <Link href={`/game?level=${level.order}`}>
                         <button className="btn btn-md border-2 border-accent shadow-glow">Play</button>
                       </Link>
                     </div>
@@ -138,7 +193,9 @@ const Index = () => {
               </div>
             ))
           ) : (
-            <p>No levels available.</p>
+            <div className="text-center py-10">
+              <p className="text-xl text-gray-500">No levels available at the moment. Please check back later.</p>
+            </div>
           )}
 
           </div>

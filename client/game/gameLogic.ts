@@ -1,12 +1,14 @@
 import { ImageEntity } from "./entities/ImageEntity";
-import { MINERALS, GAME_DURATION, SPAWN_INTERVAL, BASE_HEIGHT, MIN_SPEED, MAX_SPEED } from "./constants/gameData";
+import { MINERALS as DEFAULT_MINERALS, GAME_DURATION as DEFAULT_GAME_DURATION, SPAWN_INTERVAL as DEFAULT_SPAWN_INTERVAL, BASE_HEIGHT, MIN_SPEED as DEFAULT_MIN_SPEED, MAX_SPEED as DEFAULT_MAX_SPEED } from "./constants/gameData";
 import { getRandomMineral } from "./utils/helper";
+import { LevelConfig } from "./constants/levels";
+import { MineralInfo, MINERALS as ALL_MINERALS } from "./constants/minerals";
 
 interface CollectedMinerals {
-    [imageSrc: string]: {
+    [mineralSymbol: string]: {
         count: number;
-        value: number; 
-        totalPoints: number; 
+        value: number;
+        totalPoints: number;
     };
 }
 
@@ -27,20 +29,32 @@ export class Game {
 
     private entities: ImageEntity[] = [];
     private score: number = 0;
-    private gameTime: number = GAME_DURATION;
-    private spawnTimer: NodeJS.Timeout | null = null;
-    private gameTimer: NodeJS.Timeout | null = null;
+    private gameTime: number;
+    private spawnTimer: ReturnType<typeof setInterval> | null = null;
+    private gameTimer: ReturnType<typeof setInterval> | null = null;
     private lastUpdateTime: number = 0;
     private scoreMultiplier: number = 1;
     private doublePointsActive: boolean = false;
     private collectedMinerals: CollectedMinerals = {};
 
+    private level?: LevelConfig;
+    private mineralsPool: MineralInfo[] = [];
+    private spawnInterval: number;
+    private minSpeed: number;
+    private maxSpeed: number;
+
     // External callbacks for game events
     private onScoreUpdate?: (score: number) => void;
     private onTimeLeftUpdate?: (timeLeft: number) => void;
     private onGameOver?: (totalCollectedValue: number, collectedMinerals: CollectedMinerals) => void;
+    private availableElements: MineralInfo[];
 
-    constructor(canvas: HTMLCanvasElement, callbacks: GameCallbacks = {}) {
+    constructor(
+        canvas: HTMLCanvasElement,
+        callbacks: GameCallbacks = {},
+        level?: LevelConfig,
+        availableElementDefs: MineralInfo[] = []
+    ) {
         this.canvas = canvas;
         this.context = this.canvas.getContext("2d")!;
         this.windowWidth = window.innerWidth;
@@ -50,7 +64,31 @@ export class Game {
         this.onTimeLeftUpdate = callbacks.onTimeLeftUpdate;
         this.onGameOver = callbacks.onGameOver;
 
-        // Setup offscreen rendering for performance
+        this.level = level;
+        this.availableElements = availableElementDefs.length > 0 ? availableElementDefs : ALL_MINERALS;
+
+        if (level) {
+            const levelMineralSymbols = new Set(level.minerals);
+            this.mineralsPool = ALL_MINERALS.filter(mineral => levelMineralSymbols.has(mineral.symbol));
+
+            if (this.mineralsPool.length === 0 && level.minerals.length > 0) {
+                console.warn(`Для уровня ${level.id} ('${level.name}') указаны минералы (${level.minerals.join(', ')}), но ни один из них не найден в общем списке MINERALS. Пул спавна будет пуст.`);
+            } else if (level.minerals.length === 0) {
+                console.warn(`Для уровня ${level.id} ('${level.name}') не указаны минералы для спавна (level.minerals пуст). Пул спавна будет пуст.`);
+            }
+        } else if (availableElementDefs.length > 0) {
+            this.mineralsPool = availableElementDefs;
+            console.warn("Игра запущена без конфигурации уровня, используя переданный список доступных элементов.");
+        } else {
+            console.error("В конструктор Game не передана конфигурация уровня и нет списка доступных элементов. Пул минералов будет пуст.");
+            this.mineralsPool = [];
+        }
+
+        this.spawnInterval = level ? level.spawnInterval : DEFAULT_SPAWN_INTERVAL;
+        this.minSpeed = level ? level.minSpeed : DEFAULT_MIN_SPEED;
+        this.maxSpeed = level ? level.maxSpeed : DEFAULT_MAX_SPEED;
+        this.gameTime = level ? level.duration : DEFAULT_GAME_DURATION;
+
         this.offscreenCanvas = document.createElement("canvas");
         this.offscreenCanvas.width = this.windowWidth;
         this.offscreenCanvas.height = this.windowHeight;
@@ -60,105 +98,138 @@ export class Game {
         this.setupEventListeners();
     }
 
-    /**
-     * Initializes the main canvas properties such as size and background.
-     */
     private setupCanvas() {
-        this.canvas.style.background = "#000";
+        this.canvas.style.background = this.level ? this.level.background : "#000";
+        if (this.level && this.level.backgroundImage) {
+            this.canvas.style.backgroundImage = `url(${this.level.backgroundImage})`;
+            this.canvas.style.backgroundSize = "cover";
+            this.canvas.style.backgroundPosition = "center";
+            this.canvas.style.backgroundRepeat = "no-repeat";
+        } else {
+            this.canvas.style.backgroundImage = "none";
+        }
         this.canvas.width = this.windowWidth;
         this.canvas.height = this.windowHeight;
     }
 
-    /**
-     * Registers event listeners for user interaction.
-     */
     private setupEventListeners() {
         this.canvas.addEventListener("pointerdown", this.handlePointerDown.bind(this));
     }
 
-    /**
-     * Pointer down event handler to detect clicks on entities.
-     */
     private handlePointerDown(event: PointerEvent) {
-        this.canvas.addEventListener("pointerdown", (event: PointerEvent) => {
-            const rect = this.canvas.getBoundingClientRect();
-            const mouseX = (event.clientX - rect.left) * (this.canvas.width / rect.width);
-            const mouseY = (event.clientY - rect.top) * (this.canvas.height / rect.height);
+        const rect = this.canvas.getBoundingClientRect();
+        const mouseX = (event.clientX - rect.left) * (this.canvas.width / rect.width);
+        const mouseY = (event.clientY - rect.top) * (this.canvas.height / rect.height);
 
-            for (let i = this.entities.length - 1; i >= 0; i--) {
-                if (this.entities[i].isClicked(mouseX, mouseY)) {
-                    const entity = this.entities[i];
-                    this.collectEntity(entity);
-                    this.entities.splice(i, 1);
-                    break;
-                }
+        for (let i = this.entities.length - 1; i >= 0; i--) {
+            if (this.entities[i] && this.entities[i].isClicked(mouseX, mouseY)) {
+                const entity = this.entities[i];
+                this.collectEntity(entity);
+                this.entities.splice(i, 1);
+                break;
             }
-        });
+        }
     }
 
-
-    /**
-     * Unified method to handle collecting an entity.
-     * Applies any active multipliers and updates score & collectedMinerals.
-     */
     private collectEntity(entity: ImageEntity) {
-        const pointsEarned = entity.points * this.scoreMultiplier;
+        entity.collect();
+
+        const basePoints = entity.points;
+        const comboMultiplier = this.calculateComboMultiplier();
+        const levelMultiplier = this.level ? 1 + (this.level.id * 0.1) : 1;
+        const pointsEarned = basePoints * this.scoreMultiplier * comboMultiplier * levelMultiplier;
+
         this.score += pointsEarned;
-    
-        const imgSrc = entity.image.src;
-        if (!this.collectedMinerals[imgSrc]) {
-            // Initialize the entry with count, value, and totalPoints
-            this.collectedMinerals[imgSrc] = {
+
+        const mineralSymbol = entity.symbol;
+        const updatedCollectedMinerals = { ...this.collectedMinerals };
+
+        if (!updatedCollectedMinerals[mineralSymbol]) {
+            updatedCollectedMinerals[mineralSymbol] = {
                 count: 0,
-                value: entity.points, // Set the base value here
+                value: entity.points,
                 totalPoints: 0,
             };
         }
-    
-        // Update the entry
-        this.collectedMinerals[imgSrc].count += 1;
-        this.collectedMinerals[imgSrc].totalPoints += pointsEarned;
-    
+
+        updatedCollectedMinerals[mineralSymbol].count += 1;
+        updatedCollectedMinerals[mineralSymbol].totalPoints += pointsEarned;
+
+        this.collectedMinerals = updatedCollectedMinerals;
+
         if (this.onScoreUpdate) {
-            this.onScoreUpdate(this.score);
+            this.onScoreUpdate(parseFloat(this.score.toFixed(2)));
         }
     }
-    
-    /**
-     * Spawns a new mineral entity at a random position with a random speed.
-     */
-    private spawnEntity() {
-        const randomX = Math.random() * (this.windowWidth - 50);
-        const speedFactor = this.windowHeight / BASE_HEIGHT; 
-        const randomSpeed = (Math.random() * (MAX_SPEED - MIN_SPEED) + MIN_SPEED) * speedFactor; 
-        const mineral = getRandomMineral(MINERALS);
 
-        const entity = new ImageEntity(randomX, -50, mineral.src, randomSpeed, mineral.points);
+    private spawnEntity() {
+        if (this.mineralsPool.length === 0) {
+            return;
+        }
+
+        const randomX = Math.random() * (this.windowWidth - 50);
+        const speedFactor = this.windowHeight / BASE_HEIGHT;
+
+        const progressFactor = 1 - (this.gameTime / (this.level?.duration || DEFAULT_GAME_DURATION));
+        const dynamicMinSpeed = this.minSpeed * (1 + progressFactor * 0.5);
+        const dynamicMaxSpeed = this.maxSpeed * (1 + progressFactor * 0.3);
+
+        const randomSpeed = (Math.random() * (dynamicMaxSpeed - dynamicMinSpeed) + dynamicMinSpeed) * speedFactor;
+
+        const mineral = this.getWeightedRandomMineral();
+
+        if (!mineral) {
+            return;
+        }
+
+        let imageSrc = mineral.image;
+
+        const entity = new ImageEntity(randomX, -50, imageSrc, randomSpeed, mineral.points, mineral.symbol);
         this.entities.push(entity);
     }
 
-    /**
-     * The main game update loop, called every animation frame.
-     * Handles entity updates, clearing off-screen entities, and rendering.
-     */
+    private getWeightedRandomMineral(): MineralInfo | undefined {
+        if (this.mineralsPool.length === 0) {
+            return undefined;
+        }
+        const weights = this.mineralsPool.map(mineral => {
+            const baseWeight = 1;
+            const rarityBonus = mineral.points * 0.5;
+            const levelBonus = this.level ? this.level.id * 0.1 : 0;
+            return baseWeight + rarityBonus + levelBonus;
+        });
+
+        const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+        const normalizedWeights = weights.map(weight => weight / totalWeight);
+
+        const random = Math.random();
+        let cumulativeWeight = 0;
+
+        for (let i = 0; i < this.mineralsPool.length; i++) {
+            cumulativeWeight += normalizedWeights[i];
+            if (random <= cumulativeWeight) {
+                return this.mineralsPool[i];
+            }
+        }
+        return this.mineralsPool[0]; // Fallback
+    }
+
+    private calculateComboMultiplier(): number {
+        const recentCollections = this.entities.filter(e => e.isCollected).length;
+        return 1 + (recentCollections * 0.1);
+    }
+
     private updateEntities(currentTime: number = 0) {
         const deltaTime = (currentTime - this.lastUpdateTime) / 1000;
         this.lastUpdateTime = currentTime;
 
-        // Clear offscreen context before drawing
         this.offscreenContext.clearRect(0, 0, this.windowWidth, this.windowHeight);
-
-        // Update each entity based on deltaTime
         this.entities.forEach((entity) => entity.update(this.offscreenContext, deltaTime));
-
-        // Filter out entities that moved off-screen
         this.entities = this.entities.filter((entity) => !entity.isOffScreen(this.windowHeight));
 
-        // Render the offscreen canvas onto the main canvas
         this.context.clearRect(0, 0, this.windowWidth, this.windowHeight);
         this.context.drawImage(this.offscreenCanvas, 0, 0);
 
-        // Check if game should end
         if (this.gameTime <= 0) {
             this.endGame();
         } else {
@@ -166,71 +237,47 @@ export class Game {
         }
     }
 
-    /**
-     * Starts the game by setting up timers and initial conditions.
-     */
     public startGame() {
-        this.lastUpdateTime = performance.now(); 
-
-        // Spawn entities at a fixed interval
-        this.spawnTimer = setInterval(() => this.spawnEntity(), SPAWN_INTERVAL);
-
-        // Decrement the game time every second
+        this.collectedMinerals = {};
+        this.score = 0;
+        this.lastUpdateTime = performance.now();
+        this.spawnTimer = setInterval(() => this.spawnEntity(), this.spawnInterval);
         this.gameTimer = setInterval(() => {
             this.gameTime -= 1;
             if (this.onTimeLeftUpdate) {
                 this.onTimeLeftUpdate(this.gameTime);
             }
-            
-            // When time hits zero, stop spawning new entities
             if (this.gameTime <= 0) {
                 this.clearTimers();
             }
         }, 1000);
-
-        // Begin the entity update loop
         this.updateEntities(this.lastUpdateTime);
     }
 
-    /**
-     * Ends the game, calculates final results, and triggers the onGameOver callback.
-     */
     private endGame() {
-        // Calculate total collected value using `totalPoints` to include boosts
         let totalValue = 0;
         for (const mineralKey in this.collectedMinerals) {
             totalValue += this.collectedMinerals[mineralKey].totalPoints;
         }
-    
-        // Trigger the game-over callback with the correct total value
+
         if (this.onGameOver) {
-            this.onGameOver(totalValue, this.collectedMinerals);
+            this.onGameOver(parseFloat(totalValue.toFixed(2)), this.collectedMinerals);
         }
-    
-        // Clear any running timers
+
         this.clearTimers();
     }
-    
 
-    /**
-     * Clears all running timers (spawn and game countdown) to prevent memory leaks.
-     */
     private clearTimers() {
         if (this.spawnTimer) {
             clearInterval(this.spawnTimer);
             this.spawnTimer = null;
         }
-
         if (this.gameTimer) {
             clearInterval(this.gameTimer);
             this.gameTimer = null;
         }
     }
 
-    /**
-     * Allows external triggering of boosts/power-ups.
-     * Currently supports three types of boosts, can be extended easily.
-     */
     public useBoost(boostId: string) {
         switch (boostId) {
             case 'boost1':
@@ -246,59 +293,37 @@ export class Game {
                 console.warn(`Unknown boost ID: ${boostId}`);
         }
     }
-      
-    /**
-     * Temporarily reduces the spawn interval for faster spawning.
-     * Resets after 5 seconds.
-     */
+
     private applySpeedBoost() {
-        // Clear current spawn interval if active
         if (this.spawnTimer) {
             clearInterval(this.spawnTimer);
         }
-        
-        // Spawn entities twice as fast
-        const fastSpawnInterval = SPAWN_INTERVAL / 2;
+        const fastSpawnInterval = this.spawnInterval / 2;
         this.spawnTimer = setInterval(() => this.spawnEntity(), fastSpawnInterval);
-        
-        // After 5 seconds, revert to normal spawn rate
         setTimeout(() => {
             if (this.spawnTimer) {
                 clearInterval(this.spawnTimer);
             }
-            this.spawnTimer = setInterval(() => this.spawnEntity(), SPAWN_INTERVAL);
+            this.spawnTimer = setInterval(() => this.spawnEntity(), this.spawnInterval);
         }, 5000);
     }
-      
-    /**
-     * Dynamite boost clears all current entities, giving immediate points for all on-screen minerals.
-     */
+
     private applyDynamite() {
-        // Instead of manually duplicating scoring logic here:
-        // just loop through entities and use collectEntity for each.
         for (const entity of this.entities) {
             this.collectEntity(entity);
         }
-
-        // Clear all entities
         this.entities = [];
     }
 
-    /**
-     * Double points boost makes all future clicks worth double.
-     * Lasts for 3 seconds.
-     */
     private applyDoublePointsBoost() {
         if (this.doublePointsActive) return;
-
-        console.log("Double Points Boost Activated!");
+        console.log("Double Points Boost Activated!"); // Можно оставить для информации игроку
         this.doublePointsActive = true;
-        this.scoreMultiplier = 2; // Apply multiplier here
-
+        this.scoreMultiplier = 2;
         setTimeout(() => {
-            console.log("Double Points Boost Ended!");
+            console.log("Double Points Boost Ended!"); // Можно оставить для информации игроку
             this.doublePointsActive = false;
-            this.scoreMultiplier = 1; // Revert to normal multiplier
+            this.scoreMultiplier = 1;
         }, 3000);
     }
 }
